@@ -1,0 +1,82 @@
+@font-face {
+	font-family: Georgia;
+	src: url(fonts/georgia.ttf);
+	font-style: normal;
+}
+
+@font-face {
+	font-family: Georgia;
+	src: url(fonts/georgiab.ttf);
+	font-style: normal;
+	font-weight: bold;
+}
+
+@font-face {
+	font-family: Georgia;
+	src: url(fonts/georgiai.ttf);
+	font-style: italic;
+}
+
+@font-face {
+	font-family: Georgia;
+	src: url(fonts/georgiaz.ttf);
+	font-style: italic;
+	font-weight: bold;
+}
+
+/* — Reset & globals — */
+*,
+*::before,
+*::after {
+	margin: 0;
+	padding: 0;
+	font-family: Georgia;
+}
+
+html {
+	scroll-behavior: smooth;
+	scrollbar-width: none;            /* Firefox */
+	-ms-overflow-style: none;         /* IE10+ */
+}
+
+html::-webkit-scrollbar {           /* WebKit */
+	width: 0;
+	background: transparent;
+}
+
+body {
+	background: #F6F3EE;
+}
+
+h1 {
+	font-weight: 500;
+	font-size: 4rem;
+	color: #16242D;
+	padding-bottom: 0.8rem;
+}
+
+h2 {
+	font-weight: 500;
+	font-size: 2rem;
+	color: #1A1A1A;
+}
+
+h3 {
+	font-weight: 500;
+	font-size: 1.5rem;
+	color: #01030B;
+	padding: 1rem 0;
+}
+
+h4 {
+	font-weight: 300;
+	font-size: 1.4rem;
+	color: #4B5177;
+}
+
+p {
+	font-weight: 400;
+	font-size: 1.4rem;
+	color: #000;
+}
+
