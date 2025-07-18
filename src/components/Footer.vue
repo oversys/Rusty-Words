@@ -22,13 +22,13 @@ export default {
 		</RouterLink>
 
 		<RouterLink to="/add" @mouseover="addHover = true" @mouseleave="addHover = false">
-			<img v-show="addHover !== true && $route.path !== '/add'" src="../assets/icons/add.svg" alt="List" />
-			<img v-show="addHover || $route.path === '/add'" src="../assets/icons/add_selected.svg" alt="List" />
+			<img v-show="addHover !== true && $route.path !== '/add'" src="../assets/icons/add.svg" alt="Add" />
+			<img v-show="addHover || $route.path === '/add'" src="../assets/icons/add_selected.svg" alt="Add" />
 		</RouterLink>
 
 		<RouterLink to="`/word/${localStorage.getItem('lastWordId')}`" @mouseover="detailsHover = true" @mouseleave="detailsHover = false">
-			<img v-show="detailsHover !== true && $route.path !== '/word'" src="../assets/icons/book.svg" alt="List" />
-			<img v-show="detailsHover || $route.path === '/word'" src="../assets/icons/book_selected.svg" alt="List" />
+			<img v-show="detailsHover !== true && $route.path !== '/word'" src="../assets/icons/book.svg" alt="Details" />
+			<img v-show="detailsHover || $route.path === '/word'" src="../assets/icons/book_selected.svg" alt="Details" />
 		</RouterLink>
 	</nav>
 </template>
@@ -42,7 +42,7 @@ export default {
 	justify-content: space-around;
 	padding: 15px 10px;
 	background-color: #FFFFFC;
-	border-top: 1.5px solid #E8E5DF;
+	border-top: 1.75px solid #E6E2DE;
 }
 
 .nav a {
@@ -51,7 +51,7 @@ export default {
 	text-decoration: none;
 }
 
-img {
+.nav img {
 	height: 2rem;
 	width: auto;
 	display: block;

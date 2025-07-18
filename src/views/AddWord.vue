@@ -7,7 +7,7 @@
 	<h2>My Words</h2>
 	<h1>verdwijnen</h1>
 	<h4>(verb)</h4>
-	<h3><span style="font-family: sans-serif;">→</span> to disappear</h3>
+	<h3>→ to disappear</h3>
 </template>
 
 <style scoped>
