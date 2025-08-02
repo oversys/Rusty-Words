@@ -21,9 +21,8 @@ const router = createRouter({
 			},
 		},
 		{
-			path: '/word/:id',
+			path: '/word',
 			component: WordDetails,
-			props: true,
 			meta: {
 				title: 'Word Details | Rusty Words',
 			},

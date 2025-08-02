@@ -7,8 +7,6 @@ import Footer from './components/Footer.vue'
 
 <template>
 	<div class="container">
-		<!-- <p><strong>Current route path:</strong> {{ $route.fullPath }}</p> -->
-
 		<RouterView />
 	</div>
 

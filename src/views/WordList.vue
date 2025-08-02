@@ -12,6 +12,10 @@ export default {
 		console.log(this.words);
 	},
 	methods: {
+		viewWordDetails(word) {
+			localStorage.setItem("word", JSON.stringify(word));
+			this.$router.push('/word');
+		}
 	}
 }
 </script>
@@ -25,9 +29,9 @@ export default {
 			<input placeholder="Search words" />
 		</div>
 
-		<div v-for="word in words" class="box-container">
-			<h2>{{ word.dutch_word }}{{ word.definite_article ? ', ' : '' }} {{ word.definite_article }}</h2>
-			<p class="translation">→ <i>{{ word.english_translation }}</i></p>
+		<div v-for="word in words" class="box-container" @click="viewWordDetails(word)">
+			<h2>{{ word.dutchWord }}{{ word.definiteArticle ? ', ' : '' }} {{ word.definiteArticle }}</h2>
+			<p class="translation">→ <i>{{ word.englishTranslation }}</i></p>
 		</div>
 	</div>
 </template>
@@ -42,7 +46,7 @@ export default {
 .box-container {
 	background: #FEFEFA;
 	border-radius: 0.75rem;
-	border: 1.75px solid #E6E2DE;
+	border: 1.75px solid #D4CDC3;
 	padding: 1.5rem;
 	margin-bottom: 1rem;
 }

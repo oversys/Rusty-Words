@@ -26,7 +26,7 @@ export default {
 			<img v-show="addHover || $route.path === '/add'" src="../assets/icons/add_selected.svg" alt="Add" />
 		</RouterLink>
 
-		<RouterLink to="`/word/${localStorage.getItem('lastWordId')}`" @mouseover="detailsHover = true" @mouseleave="detailsHover = false">
+		<RouterLink to="/word" @mouseover="detailsHover = true" @mouseleave="detailsHover = false">
 			<img v-show="detailsHover !== true && $route.path !== '/word'" src="../assets/icons/book.svg" alt="Details" />
 			<img v-show="detailsHover || $route.path === '/word'" src="../assets/icons/book_selected.svg" alt="Details" />
 		</RouterLink>
@@ -42,7 +42,7 @@ export default {
 	justify-content: space-around;
 	padding: 15px 10px;
 	background-color: #FFFFFC;
-	border-top: 1.75px solid #E6E2DE;
+	border-top: 1.75px solid #D4CDC3;
 }
 
 .nav a {

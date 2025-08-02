@@ -4,14 +4,14 @@
 use rusqlite::{Connection, Result};
 
 fn main() -> Result<()> {
-    let conn = Connection::open("rusty_words.db")?;
+    let conn = Connection::open("../rusty_words.db")?;
 
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS word (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            dutch_word TEXT NOT NULL,
+            dutch_word TEXT NOT NULL CHECK (dutch_word <> ''),
             definite_article TEXT,
-            english_translation TEXT NOT NULL,
+            english_translation TEXT NOT NULL CHECK (english_translation <> ''),
             arabic_translation TEXT,
             source TEXT
         );
@@ -19,21 +19,21 @@ fn main() -> Result<()> {
         CREATE TABLE IF NOT EXISTS sentence (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             word_id INTEGER NOT NULL,
-            sentence TEXT NOT NULL,
-            meaning TEXT NOT NULL,
+            sentence TEXT NOT NULL CHECK (sentence <> ''),
+            meaning TEXT NOT NULL CHECK (meaning <> ''),
             FOREIGN KEY (word_id) REFERENCES word(id)
         );
             
         CREATE TABLE IF NOT EXISTS note (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             word_id INTEGER NOT NULL,
-            description TEXT NOT NULL,
+            description TEXT NOT NULL CHECK (description <> ''),
             FOREIGN KEY (word_id) REFERENCES word(id)
         );
             
         CREATE TABLE IF NOT EXISTS tag (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL
+            name TEXT UNIQUE NOT NULL CHECK (name <> '')
         );
             
         CREATE TABLE IF NOT EXISTS word_tag (
