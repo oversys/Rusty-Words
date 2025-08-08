@@ -49,7 +49,7 @@ export default {
 
 			<!-- Tags -->
 			<h2>Tags</h2>
-			
+
 			<p v-for="tag in word.tags">{{ tag }}</p>
 
 		</div>

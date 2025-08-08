@@ -1,4 +1,5 @@
 use rusqlite::{Connection, Result, params};
+use tauri::Manager;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -26,12 +27,13 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn get_all_words() -> Result<Vec<Word>, String> {
-    get_all_words_inner().map_err(|e| e.to_string())
+fn get_all_words(app_handle: tauri::AppHandle) -> Result<Vec<Word>, String> {
+    get_all_words_inner(app_handle).map_err(|e| e.to_string())
 }
 
-fn get_all_words_inner() -> Result<Vec<Word>> {
-    let conn = Connection::open("../rusty_words.db")?;
+fn get_all_words_inner(app_handle: tauri::AppHandle) -> Result<Vec<Word>> {
+    let db_path = app_handle.state::<std::path::PathBuf>();
+    let conn = Connection::open(db_path.inner())?;
 
     let mut stmt = conn.prepare("SELECT id, dutch_word, definite_article, english_translation, arabic_translation, source FROM word")?;
 
@@ -90,13 +92,14 @@ fn get_all_words_inner() -> Result<Vec<Word>> {
 }
 
 #[tauri::command]
-fn add_word(word: Word) -> Result<(), String> {
-    let mut conn = Connection::open("../rusty_words.db").map_err(|e| e.to_string())?;
+fn add_word(app_handle: tauri::AppHandle, word: Word) -> Result<(), String> {
+    let db_path = app_handle.state::<std::path::PathBuf>();
+    let mut conn = Connection::open(db_path.inner()).map_err(|e| e.to_string())?;
     let tx = conn.transaction().map_err(|e| e.to_string())?;
 
     tx.execute(
         "INSERT INTO word (dutch_word, definite_article, english_translation, arabic_translation, source)
-         VALUES (?1, ?2, ?3, ?4, ?5)",
+        VALUES (?1, ?2, ?3, ?4, ?5)",
         params![
             word.dutch_word,
             word.definite_article,
@@ -148,6 +151,59 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![greet, get_all_words, add_word])
+        .setup(|app| {
+            let db_path = app
+                .path()
+                .app_data_dir()
+                .expect("Failed to get app data dir")
+                .join("rusty_words.db");
+
+            let conn = Connection::open(&db_path).expect("Failed to open DB");
+
+            conn.execute_batch(
+                "CREATE TABLE IF NOT EXISTS word (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    dutch_word TEXT NOT NULL CHECK (dutch_word <> ''),
+                    definite_article TEXT,
+                    english_translation TEXT NOT NULL CHECK (english_translation <> ''),
+                    arabic_translation TEXT,
+                    source TEXT
+                );
+
+                CREATE TABLE IF NOT EXISTS sentence (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    word_id INTEGER NOT NULL,
+                    sentence TEXT NOT NULL CHECK (sentence <> ''),
+                    meaning TEXT NOT NULL CHECK (meaning <> ''),
+                    FOREIGN KEY (word_id) REFERENCES word(id)
+                );
+
+                CREATE TABLE IF NOT EXISTS note (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    word_id INTEGER NOT NULL,
+                    description TEXT NOT NULL CHECK (description <> ''),
+                    FOREIGN KEY (word_id) REFERENCES word(id)
+                );
+
+                CREATE TABLE IF NOT EXISTS tag (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE NOT NULL CHECK (name <> '')
+                );
+
+                CREATE TABLE IF NOT EXISTS word_tag (
+                    word_id INTEGER NOT NULL,
+                    tag_id INTEGER NOT NULL,
+                    PRIMARY KEY (word_id, tag_id),
+                    FOREIGN KEY (word_id) REFERENCES word(id) ON DELETE CASCADE,
+                    FOREIGN KEY (tag_id) REFERENCES tag(id) ON DELETE CASCADE
+                );"
+            )?;
+
+            // Store path globally so other commands can use it
+            app.manage(db_path);
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
