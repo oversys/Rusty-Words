@@ -40,7 +40,7 @@ export default {
 	width: 100%;
 	display: flex;
 	justify-content: space-around;
-	padding: 15px 10px;
+	padding: 1.5rem 1rem;
 	background-color: #FFFFFC;
 	border-top: 1.75px solid #D4CDC3;
 }

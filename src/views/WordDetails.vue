@@ -16,14 +16,12 @@ export default {
 
 <template>
 	<div class="main-container">
-		<h2>Word Details</h2>
-
 		<div v-if="word" class="details-container">
 			<!-- Main word details -->
 			<h1>{{ word.dutchWord }}{{ word.definiteArticle ? ', ' : '' }} {{ word.definiteArticle }}</h1>
 			<h4>(verb)</h4>
 			<p>→ {{ word.englishTranslation }}</p>
-			<p v-if="word.arabicTranslation" style="text-align: right;">{{ word.arabicTranslation }} ←</p>
+			<p v-if="word.arabicTranslation" style="text-align: right; font-family: RB;">{{ word.arabicTranslation }} ←</p>
 			<p v-if="word.source">Source: {{ word.source }}</p>
 
 			<hr />
@@ -31,9 +29,11 @@ export default {
 			<!-- Sentences -->
 			<h2>Sentences</h2>
 
-			<div v-for="sentence in word.sentences" class="box-container">
-				<p v-html="formatItalic(sentence.sentence)"></p>
-				<p>→ <span v-html="formatItalic(sentence.meaning)"></span></p>
+			<div class="sentences-container">
+				<div v-for="sentence in word.sentences" class="box-container">
+					<p v-html="formatItalic(sentence.sentence)"></p>
+					<p>→ <span v-html="formatItalic(sentence.meaning)"></span></p>
+				</div>
 			</div>
 
 			<hr />
@@ -50,8 +50,11 @@ export default {
 			<!-- Tags -->
 			<h2>Tags</h2>
 
-			<p v-for="tag in word.tags">{{ tag }}</p>
-
+			<div class="tags-container">
+				<div v-for="tag in word.tags" class="tag">
+					<a href="/">{{ tag }}</a>
+				</div>
+			</div>
 		</div>
 		<div v-else>
 			<p>This page will show the details of the last word you selected.</p>
@@ -84,6 +87,48 @@ export default {
 	border: 1.75px solid #D4CDC3;
 	padding: 1.5rem;
 	margin-bottom: 1rem;
+}
+
+.sentences-container {
+	margin-top: 0.5rem;
+}
+
+ul {
+	list-style: none;
+	padding-left: 0;
+	margin-top: 1rem;
+}
+
+ul li {
+	background: #FEFEFA;
+	border: 1.75px solid #D4CDC3;
+	border-radius: 0.75rem;
+	padding: 1rem 1.25rem;
+	margin-bottom: 0.75rem;
+	font-size: 1.5rem;
+}
+
+.tags-container {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+	margin-top: 1rem;
+}
+
+.tag {
+	background-color: #EFEBE0;
+	border: 1.75px solid #D5CEC3;
+	border-radius: 0.75rem;
+	padding: 0.3rem 0.6rem;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.tag a {
+	text-decoration: none;
+	font-weight: 400;
+	font-size: 1.4rem;
+	color: #000;
 }
 
 hr {

@@ -49,8 +49,6 @@ export default {
 
 <template>
 	<div class="main-container">
-		<h2>Add Word</h2>
-
 		<div class="field-container">
 			<p>Dutch Word</p>
 			<div class="box-container">

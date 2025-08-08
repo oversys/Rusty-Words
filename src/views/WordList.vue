@@ -4,7 +4,8 @@ import { invoke } from "@tauri-apps/api/core";
 export default {
 	data() {
 		return {
-			words: null
+			words: null,
+			searchQuery: ''
 		}
 	},
 	async mounted() {
@@ -16,20 +17,34 @@ export default {
 			localStorage.setItem("word", JSON.stringify(word));
 			this.$router.push('/word');
 		}
+	},
+	computed: {
+		filteredWords() {
+			if (!this.searchQuery) return this.words;
+
+			const query = this.searchQuery.toLowerCase();
+			return this.words.filter(word =>
+				word.dutchWord.toLowerCase().includes(query) ||
+					word.englishTranslation.toLowerCase().includes(query) ||
+					(word.definiteArticle && word.definiteArticle.toLowerCase().includes(query))
+			);
+		}
 	}
 }
 </script>
 
 <template>
 	<div class="main-container">
-		<h2>My Words</h2>
-
 		<div class="box-container search">
 			<img src="../assets/icons/search.svg" alt="Search" />
-			<input placeholder="Search words" />
+			<input v-model="searchQuery" placeholder="Search words" />
 		</div>
 
-		<div v-for="word in words" class="box-container" @click="viewWordDetails(word)">
+		<div v-for="word in filteredWords"
+			:key="word.id"
+			class="box-container"
+			@click="viewWordDetails(word)"
+		>
 			<h2>{{ word.dutchWord }}{{ word.definiteArticle ? ', ' : '' }} {{ word.definiteArticle }}</h2>
 			<p class="translation">→ <i>{{ word.englishTranslation }}</i></p>
 		</div>
