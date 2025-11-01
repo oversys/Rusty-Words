@@ -46,7 +46,11 @@ export default {
 			@click="viewWordDetails(word)"
 		>
 			<h2>{{ word.dutchWord }}{{ word.definiteArticle ? ', ' : '' }} {{ word.definiteArticle }}</h2>
-			<p class="translation">→ <i>{{ word.englishTranslation }}</i></p>
+
+			<div v-for="translation in word.translations">
+				<p v-if="translation.language == 'English'" class="translation">→ <i>{{ translation.translation }}</i></p>
+				<p v-if="translation.language == 'Arabic'" class="translation arabic-translation">{{ translation.translation }} ←</p>
+			</div>
 		</div>
 	</div>
 </template>
@@ -92,6 +96,11 @@ export default {
 
 .translation {
 	margin-top: 0.8rem;
+}
+
+.arabic-translation {
+	text-align: right;
+	font-family: RB;
 }
 </style>
 

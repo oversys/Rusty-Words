@@ -1,12 +1,33 @@
--- SQLite
-
 CREATE TABLE IF NOT EXISTS word (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	dutch_word TEXT NOT NULL CHECK (dutch_word <> ''),
+	dutch_word TEXT UNIQUE NOT NULL CHECK (dutch_word <> ''),
+	type TEXT NOT NULL CHECK (type <> '' AND type IN ('noun', 'verb', 'separable verb', 'adjective', 'adverb', 'pronoun', 'preposition', 'conjunction', 'interjection', 'not given')),
 	definite_article TEXT,
-	english_translation TEXT NOT NULL CHECK (english_translation <> ''),
-	arabic_translation TEXT,
+	preposition TEXT,
 	source TEXT
+);
+
+CREATE TABLE IF NOT EXISTS translation (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	word_id INTEGER NOT NULL,
+	translation TEXT NOT NULL CHECK (translation <> ''),
+	language TEXT NOT NULL CHECK (language <> ''),
+	FOREIGN KEY (word_id) REFERENCES word(id)
+);
+
+CREATE TABLE IF NOT EXISTS conjugation (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	word_id INTEGER NOT NULL,
+	present_ik TEXT NOT NULL CHECK (present_ik <> ''),
+	present_jij TEXT NOT NULL CHECK (present_jij <> ''),
+	present_u TEXT NOT NULL CHECK (present_u <> ''),
+	present_hij_zij_het TEXT NOT NULL CHECK (present_hij_zij_het <> ''),
+	present_plural TEXT NOT NULL CHECK (present_plural <> ''),
+	imperfectum_singular TEXT NOT NULL CHECK (imperfectum_singular <> ''),
+	imperfectum_plural TEXT NOT NULL CHECK (imperfectum_plural <> ''),
+	perfectum TEXT,
+	perfectum_auxiliary_verb TEXT CHECK (perfectum_auxiliary_verb IN ('hebben', 'zijn')),
+	FOREIGN KEY (word_id) REFERENCES word(id)
 );
 
 CREATE TABLE IF NOT EXISTS sentence (

@@ -19,9 +19,14 @@ export default {
 		<div v-if="word" class="details-container">
 			<!-- Main word details -->
 			<h1>{{ word.dutchWord }}{{ word.definiteArticle ? ', ' : '' }} {{ word.definiteArticle }}</h1>
-			<h4>(verb)</h4>
-			<p>→ {{ word.englishTranslation }}</p>
-			<p v-if="word.arabicTranslation" style="text-align: right; font-family: RB;">{{ word.arabicTranslation }} ←</p>
+			<h4>({{ word.type }})</h4>
+
+			<div v-for="translation in word.translations">
+				<p v-if="translation.language == 'English'" class="translation">→ <i>{{ translation.translation }}</i></p>
+				<p v-if="translation.language == 'Arabic'" class="translation arabic-translation">{{ translation.translation }} ←</p>
+			</div>
+
+			<p v-if="word.preposition">Preposition: {{ word.preposition }}</p>
 			<p v-if="word.source">Source: {{ word.source }}</p>
 
 			<hr />
@@ -52,7 +57,7 @@ export default {
 
 			<div class="tags-container">
 				<div v-for="tag in word.tags" class="tag">
-					<a href="/">{{ tag }}</a>
+					<a href="/">{{ tag.name }}</a>
 				</div>
 			</div>
 		</div>
@@ -79,6 +84,11 @@ export default {
 	font-size: 1.5rem;
 	color: #01030B;
 	margin-top: 0.5rem;
+}
+
+.arabic-translation {
+	text-align: right;
+	font-family: RB;
 }
 
 .box-container {
