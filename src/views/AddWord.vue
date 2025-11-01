@@ -27,7 +27,7 @@ export default {
 				notes: [""],
 				tags: []
 			},
-			availableWordTypes: ["noun", "verb", "separable verb", "adjective", "adverb", "pronoun", "preposition", "conjunction", "interjection", "not given"],
+			availableWordTypes: ["noun", "verb", "separable verb", "adjective", "adverb", "suffix", "pronoun", "preposition", "conjunction", "interjection", "not given"],
 			definiteArticles: ["de", "het", "de/het"],
 			languageOptions: ["English", "Arabic"],
 			availableTags: [],

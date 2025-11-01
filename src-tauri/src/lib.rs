@@ -290,8 +290,8 @@ pub fn run() {
             conn.execute_batch(
                 "CREATE TABLE IF NOT EXISTS word (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    dutch_word TEXT UNIQUE NOT NULL CHECK (dutch_word <> ''),
-                    type TEXT NOT NULL CHECK (type <> '' AND type IN ('noun', 'verb', 'separable verb', 'adjective', 'adverb', 'pronoun', 'preposition', 'conjunction', 'interjection', 'not given')),
+                    dutch_word TEXT NOT NULL CHECK (dutch_word <> ''),
+                    type TEXT NOT NULL CHECK (type <> '' AND type IN ('noun', 'verb', 'separable verb', 'adjective', 'adverb', 'suffix', 'pronoun', 'preposition', 'conjunction', 'interjection', 'not given')),
                     definite_article TEXT CHECK (type != 'noun' OR definite_article IN ('de', 'het', 'de/het')),
                     plural TEXT,
                     preposition TEXT CHECK (type != 'separable verb' OR (preposition IS NOT NULL AND preposition <> '')),

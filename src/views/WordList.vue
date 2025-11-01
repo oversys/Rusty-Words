@@ -46,6 +46,7 @@ export default {
 			@click="viewWordDetails(word)"
 		>
 			<h2>{{ word.dutchWord }}{{ word.definiteArticle ? ', ' : '' }} {{ word.definiteArticle }}</h2>
+			<h4>({{ word.type }})</h4>
 
 			<div v-for="translation in word.translations">
 				<p v-if="translation.language == 'English'" class="translation">→ <i>{{ translation.translation }}</i></p>
