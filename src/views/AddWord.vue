@@ -8,6 +8,7 @@ export default {
 				dutchWord: "",
 				type: "",
 				definiteArticle: "",
+				plural: "",
 				preposition: "",
 				source: "",
 				translations: [{ translation: "", language: "English" }],
@@ -26,24 +27,71 @@ export default {
 				notes: [""],
 				tags: []
 			},
-			availableTags: [],
 			availableWordTypes: ["noun", "verb", "separable verb", "adjective", "adverb", "pronoun", "preposition", "conjunction", "interjection", "not given"],
-			languageOptions: ["English", "Arabic"]
+			definiteArticles: ["de", "het", "de/het"],
+			languageOptions: ["English", "Arabic"],
+			availableTags: [],
+			selectedTagIds: [""]
 		}
 	},
 	methods: {
 		addTranslation() {
 			this.word.translations.push({ translation: "", language: "" });
 		},
+
 		addSentence() {
 			this.word.sentences.push({ sentence: "", meaning: "" });
 		},
+
 		addNote() {
 			this.word.notes.push("");
 		},
+
 		addTag() {
 			this.word.tags.push({id: -1, name: ""});
 		},
+
+		onTagSelect() {
+			const newTags = this.word.tags.filter(t => t && t.id === -1);
+
+			// Get full tags (id and name)
+			const existingSelected = this.selectedTagIds
+			.map(id => this.availableTags.find(tag => tag.id === id))
+			.filter(tag => tag) // remove null/undefined
+			.map(tag => ({ id: tag.id, name: tag.name }));
+
+			console.log(existingSelected);
+
+			this.word.tags = [...existingSelected, ...newTags];
+
+			// Find index of the last non-empty dropdown
+			const lastSelectedIndex = this.selectedTagIds.map(Boolean).lastIndexOf(true);
+
+			// Nothing selected
+			if (lastSelectedIndex === -1) {
+				this.selectedTagIds = [""];
+				return;
+			}
+
+			// Keep selections up to lastSelectedIndex
+			const kept = this.selectedTagIds.slice(0, lastSelectedIndex + 1);
+
+			// Find remaining unchosen tags
+			const remainingTags = this.availableTags.filter(
+				t => !existingSelected.some(sel => sel.id === t.id)
+			);
+
+			// Add one empty dropdown if there are still unchosen tags and the last kept isn't already empty
+			if (remainingTags.length > 0 && kept.at(-1) !== "") {
+				kept.push("");
+			} else if (kept.at(-1) === "") {
+				// If there are no remaining tags, remove unnecessary trailing empty
+				kept.pop();
+			}
+
+			this.selectedTagIds = kept;
+		},
+
 		async submitWord() {
 			console.log(this.word);
 
@@ -69,6 +117,7 @@ export default {
 			}
 		}
 	},
+
 	async mounted() {
 		this.availableTags = await invoke("get_tags");
 		console.log(this.availableTags);
@@ -101,7 +150,18 @@ export default {
 		<div v-if="word.type == 'noun'" class="field-container">
 			<p>Definite Article</p>
 			<div class="box-container">
-				<input v-model="word.definiteArticle" />
+				<select v-model="word.definiteArticle">
+					<option disabled value="">Select Definite Article</option>
+					<option v-for="(article, index) in definiteArticles" :key="index" :value="article">{{ article }}</option>
+				</select>
+			</div>
+		</div>
+
+		<!-- Plural (for most nouns) -->
+		<div v-if="word.type == 'noun'" class="field-container">
+			<p>Plural</p>
+			<div class="box-container">
+				<input v-model="word.plural" placeholder="Leave empty for no plural" />
 			</div>
 		</div>
 
@@ -167,19 +227,33 @@ export default {
 		<!-- Tags -->
 		<div class="field-container">
 			<p>Tags</p>
-			<div class="box-container">
-				<select >
-					<option disabled value="">Select Tag</option>
-					<option v-for="tag in availableTags" :key="tag.id" :value="tag.name">{{ tag.name }}</option>
+
+			<!-- Dropdowns for existing tags -->
+			<div
+				v-for="(selectedId, index) in selectedTagIds"
+				:key="'tag-select-' + index"
+				class="box-container"
+			>
+				<select v-model="selectedTagIds[index]" @change="onTagSelect">
+					<option value="">Select Tag</option>
+					<option
+						v-for="tag in availableTags.filter(availableTag => !word.tags.some(selectedTag => selectedTag.id === availableTag.id) || availableTag.id == selectedId)"
+						:key="tag.id"
+						:value="tag.id"
+					>
+						{{ tag.name }}
+					</option>
 				</select>
 			</div>
 
-			<div v-for="(tag, index) in word.tags" :key="index">
+			<!-- New tag inputs (id === -1) -->
+			<div v-for="(tag, index) in word.tags" :key="'new-tag-' + index">
 				<div v-if="tag.id === -1" class="box-container">
 					<input v-model="tag.name" placeholder="New Tag" />
 				</div>
 			</div>
-			<button @click="addTag">+ Add Tag</button>
+
+			<button @click="addTag" style="margin-top: 1rem;">+ Add Tag</button>
 		</div>
 
 		<!-- Conjugation (for verbs and separable verbs) -->

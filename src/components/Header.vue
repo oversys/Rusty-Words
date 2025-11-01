@@ -76,12 +76,12 @@ export default {
 		<!-- Page name -->
 		<h2>
 			{{
-			$route.path === '/' 
-			? 'My Words' 
-			: $route.path === '/add' 
-			? 'Add Word' 
-			: $route.path === '/word' 
-			? 'Word Details' 
+			$route.path === '/'
+			? 'My Words'
+			: $route.path === '/add'
+			? 'Add Word'
+			: $route.path === '/word'
+			? 'Word Details'
 			: ''
 			}}
 		</h2>

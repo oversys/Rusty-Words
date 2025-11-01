@@ -8,19 +8,20 @@ struct Word {
     dutch_word: String,
     r#type: String,
     definite_article: Option<String>,
+    plural: Option<String>,
     preposition: Option<String>,
     source: Option<String>,
     translations: Vec<Translation>,
     conjugation: Option<Conjugation>,
     sentences: Vec<Sentence>,
     notes: Vec<String>,
-    tags: Vec<Tag>,
+    tags: Vec<Tag>
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct Translation {
     translation: String,
-    language: String,
+    language: String
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -34,19 +35,19 @@ struct Conjugation {
     imperfectum_singular: String,
     imperfectum_plural: String,
     perfectum: Option<String>,
-    perfectum_auxiliary_verb: Option<String>,
+    perfectum_auxiliary_verb: Option<String>
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct Sentence {
     sentence: String,
-    meaning: String,
+    meaning: String
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct Tag {
     id: i32,
-    name: String,
+    name: String
 }
 
 #[tauri::command]
@@ -80,7 +81,7 @@ fn get_all_words_inner(app_handle: tauri::AppHandle) -> Result<Vec<Word>> {
     let db_path = app_handle.state::<std::path::PathBuf>();
     let conn = Connection::open(db_path.inner())?;
 
-    let mut stmt = conn.prepare("SELECT id, dutch_word, type, definite_article, preposition, source FROM word")?;
+    let mut stmt = conn.prepare("SELECT id, dutch_word, type, definite_article, plural, preposition, source FROM word")?;
 
     let word_iter = stmt.query_map([], |row| {
         Ok(Word {
@@ -88,8 +89,9 @@ fn get_all_words_inner(app_handle: tauri::AppHandle) -> Result<Vec<Word>> {
             dutch_word: row.get(1)?,
             r#type: row.get(2)?,
             definite_article: row.get(3)?,
-            preposition: row.get(4)?,
-            source: row.get(5)?,
+            plural: row.get(4)?,
+            preposition: row.get(5)?,
+            source: row.get(6)?,
             translations: vec![],
             conjugation: None,
             sentences: vec![],
@@ -151,8 +153,8 @@ fn get_all_words_inner(app_handle: tauri::AppHandle) -> Result<Vec<Word>> {
 
         // Get tags
         let mut stmt = conn.prepare(
-            "SELECT t.name FROM tag t
-            INNER JOIN word_tag wt ON wt.tag_id = t.id
+            "SELECT t.id, t.name FROM tag t
+            JOIN word_tag wt ON wt.tag_id = t.id
             WHERE wt.word_id = ?")?;
 
         let tag_iter = stmt.query_map([word.id], |row| {
@@ -181,12 +183,13 @@ fn add_word_inner(app_handle: tauri::AppHandle, word: Word) -> Result<()> {
 
     // Insert word
     tx.execute(
-        "INSERT INTO word (dutch_word, type, definite_article, preposition, source)
-         VALUES (?1, ?2, ?3, ?4, ?5)",
+        "INSERT INTO word (dutch_word, type, definite_article, plural, preposition, source)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
         params![
             word.dutch_word,
             word.r#type,
             word.definite_article,
+            word.plural,
             word.preposition,
             word.source,
         ],
@@ -286,8 +289,9 @@ pub fn run() {
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     dutch_word TEXT UNIQUE NOT NULL CHECK (dutch_word <> ''),
                     type TEXT NOT NULL CHECK (type <> '' AND type IN ('noun', 'verb', 'separable verb', 'adjective', 'adverb', 'pronoun', 'preposition', 'conjunction', 'interjection', 'not given')),
-                    definite_article TEXT,
-                    preposition TEXT,
+                    definite_article TEXT CHECK (type != 'noun' OR definite_article IN ('de', 'het', 'de/het')),
+                    plural TEXT,
+                    preposition TEXT CHECK (type != 'separable verb' OR (preposition IS NOT NULL AND preposition <> '')),
                     source TEXT
                 );
 
@@ -351,3 +355,4 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
 }
+

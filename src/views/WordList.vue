@@ -49,7 +49,7 @@ export default {
 
 			<div v-for="translation in word.translations">
 				<p v-if="translation.language == 'English'" class="translation">→ <i>{{ translation.translation }}</i></p>
-				<p v-if="translation.language == 'Arabic'" class="translation arabic-translation">{{ translation.translation }} ←</p>
+				<p v-else-if="translation.language == 'Arabic'" class="translation arabic-translation">{{ translation.translation }} ←</p>
 			</div>
 		</div>
 	</div>

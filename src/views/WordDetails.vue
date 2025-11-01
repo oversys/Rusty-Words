@@ -1,33 +1,70 @@
 <script>
+import { openUrl } from "@tauri-apps/plugin-opener";
+
 export default {
 	data() {
 		return {
-			word: JSON.parse(localStorage.getItem('word'))
+			word: JSON.parse(localStorage.getItem("word"))
 		};
 	},
 	methods: {
 		formatItalic(text) {
-			if (!text) return '';
-			return text.replace(/\*(.*?)\*/g, '<i>$1</i>');
+			if (!text) return "";
+
+			// Convert *text* to <i>text</i>
+			return text.replace(/\*(.*?)\*/g, "<i>$1</i>");
+		},
+
+		formatLinks(text) {
+			if (!text) return "";
+
+			// Convert [text](url) to <a href="url">text</a>
+			return text.replace(/\[(.*?)\]\((.*?)\)/g, (match, text, url) => {
+				if (url.startsWith("https://") || url.startsWith("http://")) {
+					return `<a style="color: #AB9C84; cursor: pointer; text-decoration: underline;" data-external-url="${url}">${text}</a>`;
+				} else {
+					return `<a style="color: #AB9C84;" href="${url}">${text}</a>`;
+				}
+			});
+		},
+
+		formatText(text) {
+			// Apply all formatting
+			let formatted = this.formatItalic(text);
+			formatted = this.formatLinks(formatted);
+
+			return formatted;
+		},
+
+		handleClick(event) {
+			const targetData = event.target.dataset;
+
+			if (targetData.externalUrl)
+				openUrl(event.target.dataset.externalUrl);
 		}
 	}
 }
 </script>
 
 <template>
-	<div class="main-container">
+	<div class="main-container" @click="handleClick">
 		<div v-if="word" class="details-container">
 			<!-- Main word details -->
-			<h1>{{ word.dutchWord }}{{ word.definiteArticle ? ', ' : '' }} {{ word.definiteArticle }}</h1>
+			<h1>{{ word.dutchWord }}{{ word.definiteArticle ? ", " : "" }} {{ word.definiteArticle }}</h1>
 			<h4>({{ word.type }})</h4>
+
+			<br>
 
 			<div v-for="translation in word.translations">
 				<p v-if="translation.language == 'English'" class="translation">→ <i>{{ translation.translation }}</i></p>
 				<p v-if="translation.language == 'Arabic'" class="translation arabic-translation">{{ translation.translation }} ←</p>
 			</div>
 
+			<hr />
+
+			<p v-if="word.plural">Plural: {{ word.plural }}</p>
 			<p v-if="word.preposition">Preposition: {{ word.preposition }}</p>
-			<p v-if="word.source">Source: {{ word.source }}</p>
+			<p v-if="word.source">Source: <span v-html="formatText(word.source)"></span></p>
 
 			<hr />
 
@@ -36,8 +73,8 @@ export default {
 
 			<div class="sentences-container">
 				<div v-for="sentence in word.sentences" class="box-container">
-					<p v-html="formatItalic(sentence.sentence)"></p>
-					<p>→ <span v-html="formatItalic(sentence.meaning)"></span></p>
+					<p v-html="formatText(sentence.sentence)"></p>
+					<p>→ <span v-html="formatText(sentence.meaning)"></span></p>
 				</div>
 			</div>
 
@@ -47,7 +84,7 @@ export default {
 			<h2>Notes</h2>
 
 			<ul>
-				<li v-for="note in word.notes">{{ note }}</li>
+				<li v-for="note in word.notes" v-html="formatText(note)"></li>
 			</ul>
 
 			<hr />
