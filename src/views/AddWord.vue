@@ -31,7 +31,17 @@ export default {
 			definiteArticles: ["de", "het", "de/het"],
 			languageOptions: ["English", "Arabic"],
 			availableTags: [],
-			selectedTagIds: [""]
+			selectedTagIds: [""],
+			conjugationLabels: {
+				presentIk: "Present, ik",
+				presentJij: "Present, jij",
+				presentU: "Present, u",
+				presentHijZijHet: "Present, hij/zij/het",
+				presentPlural: "Present, plural",
+				imperfectumSingular: "Imperfectum, singular",
+				imperfectumPlural: "Imperfectum, plural",
+				perfectum: "Perfectum"
+			}
 		}
 	},
 	methods: {
@@ -135,28 +145,27 @@ export default {
 		<!-- Word type -->
 		<div class="field-container">
 			<p>Word Type</p>
-			<div class="box-container">
-				<select v-model="word.type">
-					<option disabled value="">Select Word Type</option>
-					<option v-for="(type, index) in availableWordTypes" :key="index" :value="type">{{ type }}</option>
-				</select>
-			</div>
+
+			<select v-model="word.type">
+				<option disabled value="">Select word type</option>
+				<option v-for="(type, index) in availableWordTypes" :key="index" :value="type">{{ type }}</option>
+			</select>
 		</div>
 
 		<!-- Definite article (for nouns) -->
 		<div v-if="word.type == 'noun'" class="field-container">
 			<p>Definite Article</p>
-			<div class="box-container">
-				<select v-model="word.definiteArticle">
-					<option disabled value="">Select Definite Article</option>
-					<option v-for="(article, index) in definiteArticles" :key="index" :value="article">{{ article }}</option>
-				</select>
-			</div>
+
+			<select v-model="word.definiteArticle">
+				<option disabled value="">Select definite article</option>
+				<option v-for="(article, index) in definiteArticles" :key="index" :value="article">{{ article }}</option>
+			</select>
 		</div>
 
 		<!-- Plural (for most nouns) -->
 		<div v-if="word.type == 'noun'" class="field-container">
 			<p>Plural</p>
+
 			<div class="box-container">
 				<input v-model="word.plural" placeholder="Leave empty for no plural" />
 			</div>
@@ -165,6 +174,7 @@ export default {
 		<!-- Preposition (for separable verbs) -->
 		<div v-if="word.type == 'separable verb'" class="field-container">
 			<p>Preposition</p>
+
 			<div class="box-container">
 				<input v-model="word.preposition" />
 			</div>
@@ -173,6 +183,7 @@ export default {
 		<!-- Source -->
 		<div class="field-container">
 			<p>Source</p>
+
 			<div class="box-container">
 				<input v-model="word.source" />
 			</div>
@@ -188,20 +199,18 @@ export default {
 						v-model="translation.translation"
 						:disabled="!translation.language"
 						:dir="translation.language === 'Arabic' ? 'rtl' : 'ltr'"
-						:style="{
-							fontFamily: translation.language === 'Arabic' ? 'RB' : 'Helvetica Neue',
-							padding: translation.language === 'Arabic' ? '0.48rem 1rem' : '1rem',
-							cursor: !translation.language ? 'not-allowed' : 'text'
+						:class="{
+							rtl: translation.language === 'Arabic',
+							'disabled-input': !translation.language
 						}"
 						:placeholder="translation.language === 'Arabic' ? 'الترجمة' : 'Translation'"
 					/>
 				</div>
-				<div class="box-container" style="margin: 0;">
-					<select v-model="translation.language">
-						<option disabled value="">Select Language</option>
-						<option v-for="(lang, idx) in languageOptions" :key="idx" :value="lang">{{ lang }}</option>
-					</select>
-				</div>
+
+				<select v-model="translation.language">
+					<option disabled value="">Select language</option>
+					<option v-for="(lang, idx) in languageOptions" :key="idx" :value="lang">{{ lang }}</option>
+				</select>
 			</div>
 			<button @click="addTranslation" style="margin-top: 1.5rem;">+ Add Translation</button>
 		</div>
@@ -214,6 +223,7 @@ export default {
 				<div class="box-container" style="margin-bottom: 1rem;">
 					<input v-model="sentence.sentence" placeholder="Sentence" />
 				</div>
+
 				<div class="box-container" style="margin: 0;">
 					<input v-model="sentence.meaning" placeholder="Meaning" />
 				</div>
@@ -225,9 +235,11 @@ export default {
 		<!-- Notes -->
 		<div class="field-container">
 			<p>Notes</p>
+
 			<div v-for="(note, index) in word.notes" :key="index" class="box-container">
 				<input v-model="word.notes[index]" />
 			</div>
+
 			<button @click="addNote">+ Add Note</button>
 		</div>
 
@@ -236,22 +248,22 @@ export default {
 			<p>Tags</p>
 
 			<!-- Dropdowns for existing tags -->
-			<div
+			<select
 				v-for="(selectedId, index) in selectedTagIds"
 				:key="'tag-select-' + index"
-				class="box-container"
+				style="margin: 0 0 1.5rem 0;"
+				v-model="selectedTagIds[index]"
+				@change="onTagSelect"
 			>
-				<select v-model="selectedTagIds[index]" @change="onTagSelect">
-					<option value="">Select Tag</option>
-					<option
-						v-for="tag in availableTags.filter(availableTag => !word.tags.some(selectedTag => selectedTag.id === availableTag.id) || availableTag.id == selectedId)"
-						:key="tag.id"
-						:value="tag.id"
-					>
-						{{ tag.name }}
-					</option>
-				</select>
-			</div>
+				<option value="">Select tag</option>
+				<option
+					v-for="tag in availableTags.filter(availableTag => !word.tags.some(selectedTag => selectedTag.id === availableTag.id) || availableTag.id == selectedId)"
+					:key="tag.id"
+					:value="tag.id"
+				>
+					{{ tag.name }}
+				</option>
+			</select>
 
 			<!-- New tag inputs (id === -1) -->
 			<div v-for="(tag, index) in word.tags" :key="'new-tag-' + index">
@@ -266,44 +278,22 @@ export default {
 		<!-- Conjugation (for verbs and separable verbs) -->
 		<div v-if="word.type == 'verb' || word.type == 'separable verb'" class="field-container">
 			<p>Conjugation</p>
-			<div class="box-container">
-				<label>Present (Ik)</label>
-				<input v-model="word.conjugation.presentIk" />
-			</div>
-			<div class="box-container">
-				<label>Present (Jij)</label>
-				<input v-model="word.conjugation.presentJij" />
-			</div>
-			<div class="box-container">
-				<label>Present (U)</label>
-				<input v-model="word.conjugation.presentU" />
-			</div>
-			<div class="box-container">
-				<label>Present (Hij/Zij/Het)</label>
-				<input v-model="word.conjugation.presentHijZijHet" />
-			</div>
-			<div class="box-container">
-				<label>Present (Plural)</label>
-				<input v-model="word.conjugation.presentPlural" />
-			</div>
-			<div class="box-container">
-				<label>Imperfectum (Singular)</label>
-				<input v-model="word.conjugation.imperfectumSingular" />
-			</div>
-			<div class="box-container">
-				<label>Imperfectum (Plural)</label>
-				<input v-model="word.conjugation.imperfectumPlural" />
-			</div>
-			<div class="box-container">
-				<label>Perfectum</label>
-				<input v-model="word.conjugation.perfectum" />
-			</div>
 
-			<select v-model="word.conjugation.perfectumAuxiliaryVerb">
-				<option disabled value="">Select Perfectum Auxiliary Verb</option>
-				<option value="hebben">hebben</option>
-				<option value="zijn">zijn</option>
-			</select>
+			<div class="conjugation-grid">
+				<div class="grid-row" v-for="(label, key) in conjugationLabels" :key="key">
+					<label>{{ label }}</label>
+					<input v-model="word.conjugation[key]" />
+				</div>
+
+				<div class="grid-row">
+					<label>Perfectum Auxiliary Verb</label>
+					<select v-model="word.conjugation.perfectumAuxiliaryVerb">
+						<option disabled value="">Select</option>
+						<option value="hebben">hebben</option>
+						<option value="zijn">zijn</option>
+					</select>
+				</div>
+			</div>
 		</div>
 
 		<!-- Buttons -->
@@ -320,22 +310,6 @@ export default {
 	margin-bottom: 3rem;
 	display: flex;
 	flex-direction: column;
-}
-
-.box-container {
-	background: #FEFEFA;
-	border-radius: 0.75rem;
-	border: 1.75px solid #D4CDC3;
-	margin: 0 0 1.5rem 0;
-}
-
-.box-container input {
-	all: unset;
-	box-sizing: border-box;
-	padding: 1rem;
-	width: 100%;
-	font-size: 1.35rem;
-	font-family: Helvetica Neue;
 }
 
 .field-container {
@@ -355,7 +329,50 @@ export default {
 	margin-bottom: 1.5rem;
 }
 
-.translation-group {
+input,
+select {
+	all: unset;
+	box-sizing: border-box;
+	width: 100%;
+	font-size: 1.35rem;
+	font-family: 'Helvetica Neue', sans-serif;
+	border-radius: 0.75rem;
+	border: 1.75px solid #D4CDC3;
+	background: #FEFEFA;
+	padding: 1rem;
+}
+
+input:focus,
+select:focus {
+	outline: none;
+	border-color: #263543;
+	box-shadow: 0 0 0 2px rgba(38, 53, 67, 0.2);
+}
+
+select {
+	background: #FEFEFA url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2366654D' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E") no-repeat right 1rem center;
+}
+
+.disabled-input {
+	background: #EDEAE1;
+	color: #A0A0A0;
+	cursor: not-allowed;
+}
+
+.rtl {
+	direction: rtl;
+	font-family: RB;
+	padding: 0.48rem 1rem;
+	cursor: text;
+}
+
+.box-container {
+	margin: 0 0 1.5rem 0;
+}
+
+.translation-group,
+.sentence-group,
+.conjugation-grid {
 	background: #F2EEE6;
 	border-radius: 0.75rem;
 	border: 1.75px solid #E0DBCE;
@@ -363,12 +380,22 @@ export default {
 	margin-top: 1rem;
 }
 
-.sentence-group {
-	background: #F2EEE6;
-	border-radius: 0.75rem;
-	border: 1.75px solid #E0DBCE;
-	padding: 0.75rem;
-	margin-top: 1rem;
+.conjugation-grid {
+	display: grid;
+	grid-template-columns: 1fr 2fr;
+	gap: 0.75rem 1rem;
+	padding: 1rem;
+}
+
+.grid-row {
+	display: contents;
+}
+
+.grid-row label {
+	font-size: 1.35rem;
+	padding: 0.75rem 0;
+	font-style: italic;
+	align-self: center;
 }
 
 .buttons-container {
@@ -398,23 +425,6 @@ export default {
 	padding: 1rem;
 	font-size: 1.5rem;
 	text-align: center;
-}
-
-select {
-	background: #FEFEFA;
-	border-radius: 0.75rem;
-	border: 1.75px solid #D4CDC3;
-	padding: 0.75rem 1rem;
-	font-size: 1.35rem;
-	font-family: Helvetica Neue;
-	font-weight: 400;
-	width: 100%;
-}
-
-select:focus {
-	outline: none;
-	border-color: #263543;
-	box-shadow: 0 0 0 2px rgba(38, 53, 67, 0.2);
 }
 </style>
 
