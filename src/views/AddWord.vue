@@ -60,8 +60,6 @@ export default {
 			.filter(tag => tag) // remove null/undefined
 			.map(tag => ({ id: tag.id, name: tag.name }));
 
-			console.log(existingSelected);
-
 			this.word.tags = [...existingSelected, ...newTags];
 
 			// Find index of the last non-empty dropdown
@@ -120,7 +118,6 @@ export default {
 
 	async mounted() {
 		this.availableTags = await invoke("get_tags");
-		console.log(this.availableTags);
 	}
 }
 </script>
@@ -187,7 +184,17 @@ export default {
 
 			<div v-for="(translation, index) in word.translations" :key="index" class="translation-group">
 				<div class="box-container" style="margin-bottom: 1rem;">
-					<input v-model="translation.translation" placeholder="Translation" />
+					<input
+						v-model="translation.translation"
+						:disabled="!translation.language"
+						:dir="translation.language === 'Arabic' ? 'rtl' : 'ltr'"
+						:style="{
+							fontFamily: translation.language === 'Arabic' ? 'RB' : 'Helvetica Neue',
+							padding: translation.language === 'Arabic' ? '0.48rem 1rem' : '1rem',
+							cursor: !translation.language ? 'not-allowed' : 'text'
+						}"
+						:placeholder="translation.language === 'Arabic' ? 'الترجمة' : 'Translation'"
+					/>
 				</div>
 				<div class="box-container" style="margin: 0;">
 					<select v-model="translation.language">
@@ -324,6 +331,7 @@ export default {
 
 .box-container input {
 	all: unset;
+	box-sizing: border-box;
 	padding: 1rem;
 	width: 100%;
 	font-size: 1.35rem;

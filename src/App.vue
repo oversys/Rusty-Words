@@ -19,7 +19,7 @@ import Footer from './components/Footer.vue'
 </template>
 
 <style scoped>
-.container {
+.app-container {
 	/* Ensure content fits safely on screens with notches or nav bars */
 	padding-top: env(safe-area-inset-top);
 	padding-bottom: env(safe-area-inset-bottom);

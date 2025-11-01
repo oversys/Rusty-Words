@@ -37,10 +37,14 @@ export default {
 .nav {
 	position: fixed;
 	bottom: 0;
+	padding-top: 0.7rem;
+	padding-bottom: calc(0.5rem + env(safe-area-inset-top));
+	padding-left: 0;
+	padding-right: 0;
+
 	width: 100%;
 	display: flex;
 	justify-content: space-around;
-	padding: 1.5rem 1rem;
 	background-color: #FFFFFC;
 	border-top: 1.75px solid #D4CDC3;
 }

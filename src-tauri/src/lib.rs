@@ -15,13 +15,13 @@ struct Word {
     conjugation: Option<Conjugation>,
     sentences: Vec<Sentence>,
     notes: Vec<String>,
-    tags: Vec<Tag>
+    tags: Vec<Tag>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct Translation {
     translation: String,
-    language: String
+    language: String,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -35,19 +35,19 @@ struct Conjugation {
     imperfectum_singular: String,
     imperfectum_plural: String,
     perfectum: Option<String>,
-    perfectum_auxiliary_verb: Option<String>
+    perfectum_auxiliary_verb: Option<String>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct Sentence {
     sentence: String,
-    meaning: String
+    meaning: String,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct Tag {
     id: i32,
-    name: String
+    name: String,
 }
 
 #[tauri::command]
@@ -81,7 +81,9 @@ fn get_all_words_inner(app_handle: tauri::AppHandle) -> Result<Vec<Word>> {
     let db_path = app_handle.state::<std::path::PathBuf>();
     let conn = Connection::open(db_path.inner())?;
 
-    let mut stmt = conn.prepare("SELECT id, dutch_word, type, definite_article, plural, preposition, source FROM word")?;
+    let mut stmt = conn.prepare(
+        "SELECT id, dutch_word, type, definite_article, plural, preposition, source FROM word",
+    )?;
 
     let word_iter = stmt.query_map([], |row| {
         Ok(Word {
@@ -155,7 +157,8 @@ fn get_all_words_inner(app_handle: tauri::AppHandle) -> Result<Vec<Word>> {
         let mut stmt = conn.prepare(
             "SELECT t.id, t.name FROM tag t
             JOIN word_tag wt ON wt.tag_id = t.id
-            WHERE wt.word_id = ?")?;
+            WHERE wt.word_id = ?",
+        )?;
 
         let tag_iter = stmt.query_map([word.id], |row| {
             Ok(Tag {
@@ -270,6 +273,7 @@ VALUES (?1, ?2, ?3)",
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
@@ -355,4 +359,3 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
 }
-

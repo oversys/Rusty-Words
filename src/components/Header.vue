@@ -1,6 +1,7 @@
 <script>
-import { ask, message, open } from '@tauri-apps/plugin-dialog';
+import { ask, message, open, save } from '@tauri-apps/plugin-dialog';
 import { remove, copyFile, BaseDirectory } from '@tauri-apps/plugin-fs';
+import { platform } from '@tauri-apps/plugin-os';
 import { relaunch } from '@tauri-apps/plugin-process';
 
 export default {
@@ -22,7 +23,7 @@ export default {
 
 			if (!newDB) return;
 
-			const confirm = await ask("This will overwrite the current database. Are you sure you want to proceed?", {
+			const confirm = await ask("This will overwrite the current database. Are you sure you want to proceed? (Consider exporting the current DB first)", {
 				title: "Import DB",
 				kind: "warning",
 			});
@@ -37,22 +38,26 @@ export default {
 		},
 
 		async exportDB() {
-			const exportDirectory = await open({
-				multiple: false,
-				directory: true,
-			});
-
-			if (!exportDirectory) return;
-
 			const date = new Date();
 			const timeDate = `${String(date.getHours()).padStart(2, '0')}_${String(date.getMinutes()).padStart(2, '0')}_${String(date.getDate()).padStart(2, '0')}_${String(date.getMonth() + 1).padStart(2, '0')}_${date.getFullYear()}`;
-			const destFileName = `${exportDirectory}/rusty_words_${timeDate}.db`;
 
-			await copyFile("rusty_words.db", destFileName, {
+			const destFileName = `rusty_words_${timeDate}.db`;
+
+			const currentPlatform = platform();
+
+			if (currentPlatform == "android") {
+				var destPath = `/storage/emulated/0/Download/${destFileName}`
+			} else {
+				var destPath = await save({defaultPath: `${destFileName}`});
+
+				if (!destPath) return;
+			}
+
+			await copyFile("rusty_words.db", destPath, {
 				fromPathBaseDir: BaseDirectory.AppData,
 			})
-			.then(() => message(`Database exported successfully to:\n${destFileName}`, { title: "Export DB", kind: "info" }))
-			.catch(err => message(`Error exporting database: ${err}`, { title: "Export DB", kind: "error" }));
+			.then(() => message(`Database exported successfully to:\n${destPath}`, { title: "Export DB", kind: "info" }))
+			.catch(err => message(`Error exporting database: ${err}\n\nPATH: ${destPath}`, { title: "Export DB", kind: "error" }));
 		},
 
 		async deleteDB() {
@@ -108,11 +113,15 @@ export default {
 .header-container {
 	position: fixed;
 	top: 0;
+	padding-top: calc(0.5rem + env(safe-area-inset-top));
+	padding-bottom: 0.5rem;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+
 	width: 100%;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 1rem 0.5rem;
 	background-color: #FFFFFC;
 	border-bottom: 1.75px solid #D4CDC3;
 }
@@ -144,7 +153,7 @@ export default {
 .menu {
 	position: absolute;
 	right: 2rem;
-	top: 3rem;
+	top: calc(3rem + env(safe-area-inset-top));
 	display: flex;
 	flex-direction: column;
 	align-items: center;
