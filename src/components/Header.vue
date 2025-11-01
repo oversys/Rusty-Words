@@ -1,7 +1,6 @@
 <script>
 import { ask, message, open, save } from '@tauri-apps/plugin-dialog';
-import { remove, copyFile, BaseDirectory } from '@tauri-apps/plugin-fs';
-import { platform } from '@tauri-apps/plugin-os';
+import { remove, readFile, writeFile, BaseDirectory } from '@tauri-apps/plugin-fs';
 import { relaunch } from '@tauri-apps/plugin-process';
 
 export default {
@@ -28,12 +27,18 @@ export default {
 				kind: "warning",
 			});
 
-			if (confirm) {
-				await copyFile(newDB, "rusty_words.db", {
-					toPathBaseDir: BaseDirectory.AppData,
-				})
-				.then(() => relaunch())
-				.catch(err => message(`Error importing database: ${err}`, { title: "Import DB", kind: "error" }));
+			if (!confirm) return;
+
+			try {
+				const dbContents = await readFile(newDB);
+
+				await writeFile("rusty_words.db", dbContents, {
+					baseDir: BaseDirectory.AppData,
+				});
+
+				await relaunch();
+			} catch (err) {
+				await message(`Error importing database: ${err}`, { title: "Import DB", kind: "error" });
 			}
 		},
 
@@ -41,23 +46,21 @@ export default {
 			const date = new Date();
 			const timeDate = `${String(date.getHours()).padStart(2, '0')}_${String(date.getMinutes()).padStart(2, '0')}_${String(date.getDate()).padStart(2, '0')}_${String(date.getMonth() + 1).padStart(2, '0')}_${date.getFullYear()}`;
 
-			const destFileName = `rusty_words_${timeDate}.db`;
+			const destPath = await save({defaultPath: `rusty_words_${timeDate}.db`});
 
-			const currentPlatform = platform();
+			if (!destPath) return;
 
-			if (currentPlatform == "android") {
-				var destPath = `/storage/emulated/0/Download/${destFileName}`
-			} else {
-				var destPath = await save({defaultPath: `${destFileName}`});
+			try {
+				const dbContents = await readFile("rusty_words.db", {
+					baseDir: BaseDirectory.AppData,
+				});
 
-				if (!destPath) return;
+				await writeFile(destPath, dbContents);
+
+				await message(`Database exported successfully to:\n${destPath}`, { title: "Export DB", kind: "info" });
+			} catch (err) {
+				await message(`Error exporting database: ${err}\n\nPATH: ${destPath}`, { title: "Export DB", kind: "error" });
 			}
-
-			await copyFile("rusty_words.db", destPath, {
-				fromPathBaseDir: BaseDirectory.AppData,
-			})
-			.then(() => message(`Database exported successfully to:\n${destPath}`, { title: "Export DB", kind: "info" }))
-			.catch(err => message(`Error exporting database: ${err}\n\nPATH: ${destPath}`, { title: "Export DB", kind: "error" }));
 		},
 
 		async deleteDB() {
