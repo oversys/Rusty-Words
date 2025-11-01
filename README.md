@@ -1,7 +1,14 @@
-# Tauri + Vue 3
+# Rusty Words
 
-This template should help get you started developing with Tauri + Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+A project I'm working on to make it easier to learn words in another language. It's meant to have support for desktop and mobile (only Android tested). Has import/export/delete database functionality to allow sharing the DB between devices.
 
-## Recommended IDE Setup
+The UI needs work on both desktop (doesn't fit a desktop program) and mobile (text and elements are too big).
 
-- [VS Code](https://code.visualstudio.com/) + [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Building APK
+The `build_apk.sh` can be used as a reference on how to build the APK. It may not work on all machines when run since some tools have to be set up first (see Tauri docs for [configuring mobile targets](https://v2.tauri.app/start/prerequisites/#android) and [distributing](https://v2.tauri.app/distribute/#android).
+
+## Frameworks/tools/software
+- Tauri v2
+- Vue 3
+- SQLite (rusqlite)
+
