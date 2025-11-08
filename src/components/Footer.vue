@@ -1,4 +1,6 @@
 <script>
+import { message } from "@tauri-apps/plugin-dialog";
+
 export default {
 	data() {
 		return {
@@ -7,9 +9,16 @@ export default {
 			detailsHover: false
 		}
 	},
-	mounted() {
-	},
 	methods: {
+		async goToLastWord() {
+			const lastViewedWordId = localStorage.getItem("lastViewedWordId");
+
+			if (lastViewedWordId) {
+				this.$router.push(`/word/${lastViewedWordId}`);
+			} else {
+				await message("No word viewed yet.", { title: "Word Details", kind: "warning" });
+			}
+		}
 	}
 }
 </script>
@@ -26,10 +35,10 @@ export default {
 			<img v-show="addHover || $route.path === '/add'" src="../assets/icons/add_selected.svg" alt="Add" />
 		</RouterLink>
 
-		<RouterLink to="/word" @mouseover="detailsHover = true" @mouseleave="detailsHover = false">
-			<img v-show="detailsHover !== true && $route.path !== '/word'" src="../assets/icons/book.svg" alt="Details" />
-			<img v-show="detailsHover || $route.path === '/word'" src="../assets/icons/book_selected.svg" alt="Details" />
-		</RouterLink>
+		<button @click="goToLastWord" @mouseover="detailsHover = true" @mouseleave="detailsHover = false">
+			<img v-show="detailsHover !== true && !$route.path.startsWith('/word') && !$route.path.startsWith('/edit')" src="../assets/icons/book.svg" alt="Details" />
+			<img v-show="detailsHover || $route.path.startsWith('/word') || $route.path.startsWith('/edit')" src="../assets/icons/book_selected.svg" alt="Details" />
+		</button>
 	</nav>
 </template>
 
@@ -47,6 +56,14 @@ export default {
 	justify-content: space-around;
 	background-color: #FFFFFC;
 	border-top: 1.75px solid #D4CDC3;
+}
+
+button {
+	all: unset;
+	cursor: pointer;
+
+	-webkit-tap-highlight-color: transparent;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 .nav a {

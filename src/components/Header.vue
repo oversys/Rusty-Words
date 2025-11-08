@@ -1,7 +1,7 @@
 <script>
-import { ask, message, open, save } from '@tauri-apps/plugin-dialog';
-import { remove, readFile, writeFile, BaseDirectory } from '@tauri-apps/plugin-fs';
-import { relaunch } from '@tauri-apps/plugin-process';
+import { ask, message, open, save } from "@tauri-apps/plugin-dialog";
+import { remove, readFile, writeFile, BaseDirectory } from "@tauri-apps/plugin-fs";
+import { relaunch } from "@tauri-apps/plugin-process";
 
 export default {
 	data() {
@@ -84,13 +84,15 @@ export default {
 		<!-- Page name -->
 		<h2>
 			{{
-			$route.path === '/'
-			? 'My Words'
-			: $route.path === '/add'
-			? 'Add Word'
-			: $route.path === '/word'
-			? 'Word Details'
-			: ''
+			$route.path === "/"
+			? "My Words"
+			: $route.path === "/add"
+			? "Add Word"
+			: $route.path.startsWith("/word")
+			? "Word Details"
+			: $route.path.startsWith("/edit")
+			? "Edit Word"
+			: ""
 			}}
 		</h2>
 
@@ -144,6 +146,9 @@ export default {
 	display: flex;
 	flex-direction: column;
 	cursor: pointer;
+
+	-webkit-tap-highlight-color: transparent;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 .hamburger {

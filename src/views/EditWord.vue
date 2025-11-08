@@ -3,36 +3,17 @@ import { invoke } from "@tauri-apps/api/core";
 import { message } from "@tauri-apps/plugin-dialog";
 
 export default {
+	props: ["wordId"],
+
 	data() {
 		return {
-			word: {
-				dutchWord: "",
-				type: "",
-				definiteArticle: "",
-				plural: "",
-				preposition: "",
-				source: "",
-				translations: [{ translation: "", language: "English" }],
-				conjugation: {
-					presentIk: "",
-					presentJij: "",
-					presentU: "",
-					presentHijZijHet: "",
-					presentPlural: "",
-					imperfectumSingular: "",
-					imperfectumPlural: "",
-					perfectum: "",
-					perfectumAuxiliaryVerb: ""
-				},
-				sentences: [{ sentence: "", meaning: "" }],
-				notes: [""],
-				tags: []
-			},
+			word: null,
 			availableWordTypes: ["noun", "verb", "separable verb", "adjective", "adverb", "suffix", "pronoun", "preposition", "conjunction", "interjection", "not given"],
 			definiteArticles: ["de", "het", "de/het"],
 			languageOptions: ["English", "Arabic"],
 			availableTags: [],
 			selectedTagIds: [""],
+			previousTags: [],
 			conjugationLabels: {
 				presentIk: "Present, ik",
 				presentJij: "Present, jij",
@@ -62,6 +43,11 @@ export default {
 			this.word.tags.push({id: -1, name: ""});
 		},
 
+		removeTag(tagId) {
+			this.previousTags = this.previousTags.filter(t => t.id !== tagId);
+			this.onTagSelect();
+		},
+
 		onTagSelect() {
 			const newTags = this.word.tags.filter(t => t && t.id === -1);
 
@@ -71,7 +57,7 @@ export default {
 			.filter(tag => tag) // remove null/undefined
 			.map(tag => ({ id: tag.id, name: tag.name }));
 
-			this.word.tags = [...existingSelected, ...newTags];
+			this.word.tags = [...this.previousTags, ...existingSelected, ...newTags];
 
 			// Find index of the last non-empty dropdown
 			const lastSelectedIndex = this.selectedTagIds.map(Boolean).lastIndexOf(true);
@@ -87,7 +73,7 @@ export default {
 
 			// Find remaining unchosen tags
 			const remainingTags = this.availableTags.filter(
-				t => !existingSelected.some(sel => sel.id === t.id)
+				t => !existingSelected.some(sel => sel.id === t.id) && !this.previousTags.some(previousTag => previousTag.id === t.id)
 			);
 
 			// Add one empty dropdown if there are still unchosen tags and the last kept isn't already empty
@@ -101,7 +87,7 @@ export default {
 			this.selectedTagIds = kept;
 		},
 
-		async addWord() {
+		async updateWord() {
 			console.log(this.word);
 
 			try {
@@ -117,25 +103,29 @@ export default {
 					tags: this.word.tags.filter(t => t.name.trim())
 				};
 
+				await invoke("delete_word", { wordId: parseInt(this.wordId) });
 				await invoke("add_word", { word: cleanedWord });
-				await message("Word added successfully!", { title: "Add word", kind: "info" });
+				await message("Word edited successfully!", { title: "Edit word", kind: "info" });
 
+				localStorage.removeItem("lastViewedWordId");
 				this.$router.push("/");
 			} catch (e) {
 				console.error(e);
-				await message("Failed to add word.", { title: "Add word", kind: "error" });
+				await message("Failed to add word.", { title: "Edit word", kind: "error" });
 			}
 		}
 	},
 
 	async created() {
 		this.availableTags = await invoke("get_tags");
+		this.word = await invoke("get_word", { wordId: parseInt(this.wordId) });
+		this.previousTags = this.word.tags;
 	}
 }
 </script>
 
 <template>
-	<div class="main-container">
+	<div class="main-container" v-if="word">
 		<!-- Dutch word -->
 		<div class="field-container">
 			<p>Dutch Word</p>
@@ -249,6 +239,14 @@ export default {
 		<div class="field-container">
 			<p>Tags</p>
 
+			<!-- Show existing tags -->
+			<div class="tags-container" v-if="word.tags && word.tags.length">
+				<div v-for="(tag, index) in previousTags" class="tag">
+					<p>{{ tag.name }}</p>
+					<button id="remove-tag-btn" @click="removeTag(tag.id)">×</button>
+				</div>
+			</div>
+
 			<!-- Dropdowns for existing tags -->
 			<select
 				v-for="(selectedId, index) in selectedTagIds"
@@ -273,7 +271,7 @@ export default {
 					<input v-model="tag.name" placeholder="New Tag" />
 				</div>
 			</div>
-
+			
 			<button @click="addTag" style="margin-top: 1rem;">+ Add Tag</button>
 		</div>
 
@@ -301,7 +299,7 @@ export default {
 		<!-- Buttons -->
 		<div class="buttons-container">
 			<RouterLink to="/" class="cancel-btn">Cancel</RouterLink>
-			<button @click="addWord" class="save-btn">Save</button>
+			<button @click="updateWord" class="save-btn">Save</button>
 		</div>
 	</div>
 </template>
@@ -398,6 +396,39 @@ select {
 	padding: 0.75rem 0;
 	font-style: italic;
 	align-self: center;
+}
+
+.tags-container {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+	margin-bottom: 1rem;
+}
+
+.tag {
+	background-color: #EFEBE0;
+	border: 1.75px solid #D5CEC3;
+	border-radius: 0.5rem;
+	padding: 0.3rem 0.6rem;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.tag p {
+	all: unset;
+	text-decoration: none;
+	font-weight: 400;
+	font-size: 1.4rem;
+	color: #000;
+}
+
+#remove-tag-btn {
+	all: unset;
+	margin-left: 0.6rem;
+	font-weight: bold;
+	cursor: pointer;
+	font-size: 1.4rem;
+	color: #C0392B;
 }
 
 .buttons-container {

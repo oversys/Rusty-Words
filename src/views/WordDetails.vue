@@ -1,10 +1,14 @@
 <script>
+import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { ask, message } from "@tauri-apps/plugin-dialog";
 
 export default {
+	props: ["wordId"],
+
 	data() {
 		return {
-			word: JSON.parse(localStorage.getItem("word")),
+			word: null,
 			conjugationLabels: {
 				presentIk: "Present, ik",
 				presentJij: "Present, jij",
@@ -51,17 +55,46 @@ export default {
 
 			if (targetData.externalUrl)
 				openUrl(event.target.dataset.externalUrl);
+		},
+
+		async removeWord() {
+			const confirm = await ask("Are you sure you want to delete this word?", {
+				title: "Delete word",
+				kind: "warning",
+			});
+
+			if (confirm) {
+				await invoke("delete_word", { wordId: parseInt(this.wordId) });
+				await message("Word deleted successfully.", { title: "Delete word", kind: "info" });
+
+				localStorage.removeItem("lastViewedWordId");
+				this.$router.push("/");
+			}
 		}
-	}
+	},
+
+	async created() {
+		this.word = await invoke("get_word", { wordId: parseInt(this.wordId) });
+		localStorage.setItem("lastViewedWordId", parseInt(this.wordId));
+	},
 }
 </script>
 
 <template>
 	<div class="main-container" @click="handleClick">
-		<div v-if="word" class="details-container">
+		<div v-if="word" class="word-container">
 			<!-- Main word details -->
-			<h1>{{ word.dutchWord }}{{ word.definiteArticle ? ", " : "" }} {{ word.definiteArticle }}</h1>
-			<h4>({{ word.type }})</h4>
+			<div class="word-header">
+				<div class="word-info">
+					<h1>{{ word.dutchWord }}{{ word.definiteArticle ? ", " : "" }} {{ word.definiteArticle }}</h1>
+					<h4>({{ word.type }})</h4>
+				</div>
+
+				<div class="word-actions">
+					<button class="remove-btn" @click="removeWord">Remove</button>
+					<RouterLink :to="`/edit/${word.id}`" class="edit-btn">Edit</RouterLink>
+				</div>
+			</div>
 
 			<br>
 
@@ -75,7 +108,7 @@ export default {
 			<!-- Details -->
 			<h2>Details</h2>
 
-			<div v-if="word.plural || word.preposition || word.source" class="details-section">
+			<div v-if="word.plural || word.preposition || word.source" class="details-container">
 				<p v-if="word.plural">
 					<span class="label">Plural:</span> {{ word.plural }}
 				</p>
@@ -120,7 +153,7 @@ export default {
 
 			<div class="tags-container" v-if="word.tags && word.tags.length">
 				<div v-for="tag in word.tags" class="tag">
-					<a href="/">{{ tag.name }}</a>
+					<RouterLink :to="{ path: '/', query: { tag: tag.id } }">{{ tag.name }}</RouterLink>
 				</div>
 			</div>
 			<div v-else class="empty-section">No tags for this word.</div>
@@ -153,21 +186,68 @@ export default {
 
 <style scoped>
 .main-container {
-	padding: 2rem 1rem;
+	padding: 1rem;
 	margin-bottom: 3rem;
 	display: flex;
 	flex-direction: column;
 }
 
-.details-container {
+.word-container {
 	margin-top: 1rem;
 }
 
-.details-container p {
+.word-container p {
 	font-weight: 500;
 	font-size: 1.5rem;
 	color: #01030B;
 	margin-top: 0.5rem;
+}
+
+.word-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+	word-break: break-word;
+	-ms-hyphens: auto;
+	-moz-hyphens: auto;
+	-webkit-hyphens: auto;
+	hyphens: auto;
+}
+
+.word-actions {
+	display: flex;
+	gap: 0.75rem;
+}
+
+.edit-btn,
+.remove-btn {
+	all: unset;
+	padding: 0.4rem 0.8rem;
+	font-size: 1.2rem;
+	border-radius: 0.5rem;
+	cursor: pointer;
+	border: 1.75px solid #D4CDC3;
+	background-color: #EFEBE0;
+	color: #000;
+	transition: all 0.2s ease;
+	text-decoration: none;
+	text-align: center;
+}
+
+.edit-btn:hover {
+	background-color: #E3DCCD;
+}
+
+.remove-btn {
+	background-color: #F8DADA;
+	border-color: #E6B4B4;
+}
+
+.remove-btn:hover {
+	background-color: #F2BDBD;
 }
 
 .arabic-translation {
@@ -183,14 +263,14 @@ export default {
 	margin-bottom: 1rem;
 }
 
-.details-section {
+.details-container {
 	display: flex;
 	flex-direction: column;
 	gap: 0.75rem;
 	margin-top: 1rem;
 }
 
-.details-section p {
+.details-container p {
 	font-size: 1.5rem;
 	color: #01030B;
 	margin: 0;
@@ -234,7 +314,7 @@ ul li {
 .tag {
 	background-color: #EFEBE0;
 	border: 1.75px solid #D5CEC3;
-	border-radius: 0.75rem;
+	border-radius: 0.5rem;
 	padding: 0.3rem 0.6rem;
 	text-align: center;
 	white-space: nowrap;
@@ -245,6 +325,7 @@ ul li {
 	font-weight: 400;
 	font-size: 1.4rem;
 	color: #000;
+	cursor: pointer;
 }
 
 hr {
@@ -301,6 +382,26 @@ hr {
 	padding: 1rem;
 	margin: 1rem 0;
 	text-align: center;
+}
+
+/* Move buttons below word and type on narrow screens */
+@media (max-width: 1200px) {
+	.word-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1rem;
+	}
+
+	.word-actions {
+		width: 100%;
+		justify-content: center;
+		gap: 0.5rem;
+	}
+
+	.edit-btn,
+	.remove-btn {
+		width: 50%;
+	}
 }
 </style>
 

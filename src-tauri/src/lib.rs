@@ -55,28 +55,6 @@ fn get_all_words(app_handle: tauri::AppHandle) -> Result<Vec<Word>, String> {
     get_all_words_inner(app_handle).map_err(|e| e.to_string())
 }
 
-#[tauri::command]
-fn get_tags(app_handle: tauri::AppHandle) -> Result<Vec<Tag>, String> {
-    get_tags_inner(app_handle).map_err(|e| e.to_string())
-}
-
-fn get_tags_inner(app_handle: tauri::AppHandle) -> Result<Vec<Tag>> {
-    let db_path = app_handle.state::<std::path::PathBuf>();
-    let conn = Connection::open(db_path.inner())?;
-
-    // Get all tags
-    let mut stmt = conn.prepare("SELECT id, name FROM tag")?;
-
-    let tag_iter = stmt.query_map([], |row| {
-        Ok(Tag {
-            id: row.get(0)?,
-            name: row.get(1)?,
-        })
-    })?;
-
-    Ok(tag_iter.filter_map(Result::ok).collect())
-}
-
 fn get_all_words_inner(app_handle: tauri::AppHandle) -> Result<Vec<Word>> {
     let db_path = app_handle.state::<std::path::PathBuf>();
     let conn = Connection::open(db_path.inner())?;
@@ -175,6 +153,100 @@ fn get_all_words_inner(app_handle: tauri::AppHandle) -> Result<Vec<Word>> {
 }
 
 #[tauri::command]
+fn get_word(app_handle: tauri::AppHandle, word_id: i32) -> Result<Word, String> {
+    get_word_inner(app_handle, word_id).map_err(|e| e.to_string())
+}
+
+fn get_word_inner(app_handle: tauri::AppHandle, word_id: i32) -> Result<Word> {
+    let db_path = app_handle.state::<std::path::PathBuf>();
+    let conn = Connection::open(db_path.inner())?;
+
+    let mut stmt = conn.prepare(
+        "SELECT id, dutch_word, type, definite_article, plural, preposition, source FROM word WHERE id = ?",
+    )?;
+
+    let mut word = stmt.query_row([word_id], |row| {
+        Ok(Word {
+            id: row.get(0)?,
+            dutch_word: row.get(1)?,
+            r#type: row.get(2)?,
+            definite_article: row.get(3)?,
+            plural: row.get(4)?,
+            preposition: row.get(5)?,
+            source: row.get(6)?,
+            translations: vec![],
+            conjugation: None,
+            sentences: vec![],
+            notes: vec![],
+            tags: vec![],
+        })
+    })?;
+
+    // Get translations
+    let mut stmt = conn.prepare("SELECT translation, language FROM translation WHERE word_id = ? ORDER BY language DESC")?;
+    let translation_iter = stmt.query_map([word.id], |row| {
+        Ok(Translation {
+            translation: row.get(0)?,
+            language: row.get(1)?,
+        })
+    })?;
+    word.translations = translation_iter.filter_map(Result::ok).collect();
+
+    // Get conjugation
+    if word.r#type == "verb" || word.r#type == "separable verb" {
+        let mut stmt = conn.prepare("SELECT present_ik, present_jij, present_u, present_hij_zij_het, present_plural, imperfectum_singular, imperfectum_plural, perfectum, perfectum_auxiliary_verb FROM conjugation WHERE word_id = ?")?;
+
+        let conjugation_row = stmt.query_row([word.id], |row| {
+            Ok(Conjugation {
+                present_ik: row.get(0)?,
+                present_jij: row.get(1)?,
+                present_u: row.get(2)?,
+                present_hij_zij_het: row.get(3)?,
+                present_plural: row.get(4)?,
+                imperfectum_singular: row.get(5)?,
+                imperfectum_plural: row.get(6)?,
+                perfectum: row.get(7)?,
+                perfectum_auxiliary_verb: row.get(8)?,
+            })
+        })?;
+
+        word.conjugation = Some(conjugation_row);
+    }
+
+    // Get sentences
+    let mut stmt = conn.prepare("SELECT sentence, meaning FROM sentence WHERE word_id = ?")?;
+    let sentence_iter = stmt.query_map([word.id], |row| {
+        Ok(Sentence {
+            sentence: row.get(0)?,
+            meaning: row.get(1)?,
+        })
+    })?;
+    word.sentences = sentence_iter.filter_map(Result::ok).collect();
+
+    // Get notes
+    let mut stmt = conn.prepare("SELECT description FROM note WHERE word_id = ?")?;
+    let note_iter = stmt.query_map([word.id], |row| row.get::<_, String>(0))?;
+    word.notes = note_iter.collect::<Result<Vec<String>, _>>()?;
+
+    // Get tags
+    let mut stmt = conn.prepare(
+        "SELECT t.id, t.name FROM tag t
+        JOIN word_tag wt ON wt.tag_id = t.id
+        WHERE wt.word_id = ?",
+    )?;
+
+    let tag_iter = stmt.query_map([word.id], |row| {
+        Ok(Tag {
+            id: row.get(0)?,
+            name: row.get(1)?,
+        })
+    })?;
+    word.tags = tag_iter.filter_map(Result::ok).collect();
+
+    Ok(word)
+}
+
+#[tauri::command]
 fn add_word(app_handle: tauri::AppHandle, word: Word) -> Result<(), String> {
     add_word_inner(app_handle, word).map_err(|e| e.to_string())
 }
@@ -187,7 +259,7 @@ fn add_word_inner(app_handle: tauri::AppHandle, word: Word) -> Result<()> {
     // Insert word
     tx.execute(
         "INSERT INTO word (dutch_word, type, definite_article, plural, preposition, source)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
         params![
             word.dutch_word,
             word.r#type,
@@ -204,7 +276,7 @@ fn add_word_inner(app_handle: tauri::AppHandle, word: Word) -> Result<()> {
     for translation in word.translations {
         tx.execute(
             "INSERT INTO translation (word_id, translation, language)
-VALUES (?1, ?2, ?3)",
+            VALUES (?1, ?2, ?3)",
             params![word_id, translation.translation, translation.language],
         )?;
     }
@@ -216,7 +288,7 @@ VALUES (?1, ?2, ?3)",
                 word_id, present_ik, present_jij, present_u, present_hij_zij_het,
                 present_plural, imperfectum_singular, imperfectum_plural,
                 perfectum, perfectum_auxiliary_verb
-                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
             params![
                 word_id,
                 conjugation.present_ik,
@@ -270,6 +342,49 @@ VALUES (?1, ?2, ?3)",
     tx.commit()
 }
 
+#[tauri::command]
+fn delete_word(app_handle: tauri::AppHandle, word_id: i32) -> Result<(), String> {
+    delete_word_inner(app_handle, word_id).map_err(|e| e.to_string())
+}
+
+fn delete_word_inner(app_handle: tauri::AppHandle, word_id: i32) -> Result<()> {
+    let db_path = app_handle.state::<std::path::PathBuf>();
+    let mut conn = Connection::open(db_path.inner())?;
+    let tx = conn.transaction()?;
+
+    tx.execute("DELETE FROM translation WHERE word_id = ?", [word_id])?;
+    tx.execute("DELETE FROM conjugation WHERE word_id = ?", [word_id])?;
+    tx.execute("DELETE FROM sentence WHERE word_id = ?", [word_id])?;
+    tx.execute("DELETE FROM note WHERE word_id = ?", [word_id])?;
+    tx.execute("DELETE FROM word_tag WHERE word_id = ?", [word_id])?;
+
+    tx.execute("DELETE FROM word WHERE id = ?", [word_id])?;
+
+    tx.commit()
+}
+
+#[tauri::command]
+fn get_tags(app_handle: tauri::AppHandle) -> Result<Vec<Tag>, String> {
+    get_tags_inner(app_handle).map_err(|e| e.to_string())
+}
+
+fn get_tags_inner(app_handle: tauri::AppHandle) -> Result<Vec<Tag>> {
+    let db_path = app_handle.state::<std::path::PathBuf>();
+    let conn = Connection::open(db_path.inner())?;
+
+    // Get all tags
+    let mut stmt = conn.prepare("SELECT id, name FROM tag")?;
+
+    let tag_iter = stmt.query_map([], |row| {
+        Ok(Tag {
+            id: row.get(0)?,
+            name: row.get(1)?,
+        })
+    })?;
+
+    Ok(tag_iter.filter_map(Result::ok).collect())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -277,7 +392,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![get_all_words, get_tags, add_word])
+        .invoke_handler(tauri::generate_handler![get_all_words, get_word, add_word, delete_word, get_tags])
         .setup(|app| {
             let db_path = app
                 .path()
@@ -358,3 +473,4 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
 }
+
