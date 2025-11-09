@@ -57,6 +57,15 @@ export default {
 				openUrl(event.target.dataset.externalUrl);
 		},
 
+		async copyReference() {
+			try {
+				await navigator.clipboard.writeText(`/word/${this.wordId}`);
+				await message("Reference copied to clipboard.", { title: "Copy Reference", kind: "info" });
+			} catch (err) {
+				await message("Failed to copy reference.", { title: "Copy Reference", kind: "error" });
+			}
+		},
+
 		async removeWord() {
 			const confirm = await ask("Are you sure you want to delete this word?", {
 				title: "Delete word",
@@ -92,7 +101,8 @@ export default {
 
 				<div class="word-actions">
 					<button class="remove-btn" @click="removeWord">Remove</button>
-					<RouterLink :to="`/edit/${word.id}`" class="edit-btn">Edit</RouterLink>
+					<button class="normal-btn" @click="copyReference">Copy Reference</button>
+					<RouterLink :to="`/edit/${word.id}`" class="normal-btn">Edit</RouterLink>
 				</div>
 			</div>
 
@@ -220,9 +230,10 @@ export default {
 .word-actions {
 	display: flex;
 	gap: 0.75rem;
+	white-space: nowrap;
 }
 
-.edit-btn,
+.normal-btn,
 .remove-btn {
 	all: unset;
 	padding: 0.4rem 0.8rem;
@@ -237,7 +248,7 @@ export default {
 	text-align: center;
 }
 
-.edit-btn:hover {
+.normal-btn:hover {
 	background-color: #E3DCCD;
 }
 
@@ -398,7 +409,7 @@ hr {
 		gap: 0.5rem;
 	}
 
-	.edit-btn,
+	.normal-btn,
 	.remove-btn {
 		width: 50%;
 	}

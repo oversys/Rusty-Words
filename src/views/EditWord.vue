@@ -271,7 +271,7 @@ export default {
 					<input v-model="tag.name" placeholder="New Tag" />
 				</div>
 			</div>
-			
+
 			<button @click="addTag" style="margin-top: 1rem;">+ Add Tag</button>
 		</div>
 
