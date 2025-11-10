@@ -257,20 +257,40 @@ fn add_word_inner(app_handle: tauri::AppHandle, word: Word) -> Result<()> {
     let tx = conn.transaction()?;
 
     // Insert word
-    tx.execute(
-        "INSERT INTO word (dutch_word, type, definite_article, plural, preposition, source)
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-        params![
-            word.dutch_word,
-            word.r#type,
-            word.definite_article,
-            word.plural,
-            word.preposition,
-            word.source,
-        ],
-    )?;
+    let word_id = if let Some(id) = word.id {
+        // Preserve word ID if given (editing word)
+        tx.execute(
+            "INSERT INTO word (id, dutch_word, type, definite_article, plural, preposition, source)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![
+                word.id,
+                word.dutch_word,
+                word.r#type,
+                word.definite_article,
+                word.plural,
+                word.preposition,
+                word.source,
+            ],
+        )?;
 
-    let word_id = tx.last_insert_rowid();
+        id as i32
+    } else {
+        // Let DB automatically give ID (new word)
+        tx.execute(
+            "INSERT INTO word (dutch_word, type, definite_article, plural, preposition, source)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![
+                word.dutch_word,
+                word.r#type,
+                word.definite_article,
+                word.plural,
+                word.preposition,
+                word.source,
+            ],
+        )?;
+
+        tx.last_insert_rowid() as i32
+    };
 
     // Insert translations
     for translation in word.translations {

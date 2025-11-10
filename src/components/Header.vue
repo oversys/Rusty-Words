@@ -10,10 +10,6 @@ export default {
 		};
 	},
 	methods: {
-		toggleMenu() {
-			this.showMenu = !this.showMenu;
-		},
-
 		async importDB() {
 			const newDB = await open({
 				multiple: false,
@@ -74,7 +70,19 @@ export default {
 				.then(() => relaunch())
 				.catch(err => message("Error deleting database: " + err, { title: "Delete DB", kind: "error" }));
 			}
+		},
+
+		handleClickOutside(event) {
+			// Close the menu if clicked outside
+			if (this.showMenu && !this.$refs.menu.contains(event.target) && !this.$refs.hamburger.contains(event.target))
+				this.showMenu = false;
 		}
+	},
+	mounted() {
+		document.addEventListener("mousedown", this.handleClickOutside);
+	},
+	beforeDestroy() {
+		document.removeEventListener("mousedown", this.handleClickOutside);
 	}
 };
 </script>
@@ -98,7 +106,7 @@ export default {
 
 		<!-- Hamburger button -->
 		<div class="hamburger-wrapper">
-			<div class="hamburger-container" @click="toggleMenu">
+			<div class="hamburger-container" @click="showMenu = !showMenu" ref="hamburger">
 				<div class="hamburger"></div>
 				<div class="hamburger"></div>
 				<div class="hamburger"></div>
@@ -106,7 +114,7 @@ export default {
 		</div>
 
 		<!-- Menu (hidden by default) -->
-		<div v-if="showMenu" class="menu">
+		<div v-if="showMenu" class="menu" ref="menu">
 			<button @click="importDB">Import DB</button>
 			<button @click="exportDB">Export DB</button>
 			<button @click="deleteDB">Delete DB</button>
@@ -184,6 +192,9 @@ export default {
 	font-size: 1rem;
 	text-align: center;
 	cursor: pointer;
+
+	-webkit-tap-highlight-color: transparent;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 </style>
 
