@@ -355,7 +355,7 @@ hr {
 .conjugation-grid {
 	display: grid;
 	grid-template-columns: 1fr 2fr;
-	gap: 0.75rem 1rem;
+	gap: 0.75rem 3rem;
 	background: #F2EEE6;
 	border-radius: 0.75rem;
 	border: 1.75px solid #E0DBCE;
@@ -412,6 +412,18 @@ hr {
 	.normal-btn,
 	.remove-btn {
 		width: 50%;
+	}
+}
+
+/* Show conjugation in 1 column on narrow screens as opposed to the label and conjugation being next to each other */
+@media (max-width: 875px) {
+	.conjugation-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.grid-row {
+		display: flex;
+		flex-direction: column;
 	}
 }
 </style>

@@ -60,7 +60,7 @@ fn get_all_words_inner(app_handle: tauri::AppHandle) -> Result<Vec<Word>> {
     let conn = Connection::open(db_path.inner())?;
 
     let mut stmt = conn.prepare(
-        "SELECT id, dutch_word, type, definite_article, plural, preposition, source FROM word",
+        "SELECT id, dutch_word, type, definite_article, plural, preposition, source FROM word ORDER BY id DESC",
     )?;
 
     let word_iter = stmt.query_map([], |row| {
