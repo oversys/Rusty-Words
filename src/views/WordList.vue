@@ -4,6 +4,8 @@ import { invoke } from "@tauri-apps/api/core";
 export default {
 	data() {
 		return {
+			showScrollButton: false,
+
 			words: null,
 			searchQuery: "",
 			showFilters: false,
@@ -22,6 +24,15 @@ export default {
 			this.selectedWordTypes = [];
 			this.selectedArticles = [];
 			this.selectedTags = [];
+		},
+		handleScroll() {
+			this.showScrollButton = window.scrollY > window.innerHeight * 2;
+		},
+		scrollToTop() {
+			window.scrollTo({
+				top: 0,
+				behavior: "smooth"
+			});
 		}
 	},
 	computed: {
@@ -80,12 +91,28 @@ export default {
 			this.selectedTags = [parseInt(tagFromQuery)];
 			this.showFilters = true;
 		}
+	},
+	mounted() {
+		window.addEventListener("scroll", this.handleScroll);
+	},
+	unmounted() {
+		window.removeEventListener("scroll", this.handleScroll);
 	}
 }
 </script>
 
 <template>
 	<div class="main-container">
+		<transition name="fade">
+			<button
+				v-if="showScrollButton"
+				class="scroll-top-btn"
+				@click="scrollToTop"
+			>
+				<img src="../assets/icons/arrow_up.svg" alt="Up" />
+			</button>
+		</transition>
+
 		<!-- Search & Filter -->
 		<div class="search-filter-container">
 			<div class="box-container search">
@@ -95,6 +122,9 @@ export default {
 
 			<button class="filter-button" @click="showFilters = !showFilters"><img src="../assets/icons/filter.svg" alt="Filter" /></button>
 		</div>
+
+		<p v-if="filteredWords.length !== words.length" style="margin-bottom: 1rem;"><b>{{ filteredWords.length }}</b> out of <b>{{ words.length }}</b> words matched search/filter criteria.</p>
+		<p v-else style="margin-bottom: 1.5rem;"><b>{{ words.length }}</b> words found.</p>
 
 		<!-- Collapsible filter section -->
 		<transition name="slide-fade">
@@ -163,19 +193,70 @@ export default {
 	flex-direction: column;
 }
 
+.scroll-top-btn {
+	position: fixed;
+	top: 4.5rem;
+	left: 0;
+	right: 0;
+	margin: 0 auto;
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: 50%;
+	background: #FEFEFA;
+	border: 1.75px solid #D4CDC3;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	z-index: 100;
+	transition: transform 0.2s ease;
+
+	-webkit-tap-highlight-color: transparent;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+.scroll-top-btn:focus {
+	outline: 0;
+}
+
+.scroll-top-btn img {
+	height: 1.8rem;
+	width: 1.8rem;
+}
+
+@media (hover: hover) {
+	.scroll-top-btn:hover {
+		background: #F8F6F1;
+		transform: translateY(-2px);
+	}
+}
+
+.fade-enter-active,
+.fade-leave-active {
+	transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+	opacity: 0;
+	transform: translateY(-10px);
+}
+
 .search-filter-container {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
-	margin-bottom: 1rem;
 }
 
 .filters {
 	box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
 }
 
-.filters:hover {
-	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+@media (hover: hover) {
+	.filters:hover {
+		box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+	}
 }
 
 .filter-button {
@@ -256,7 +337,13 @@ export default {
 	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
-.filter-options label:hover, .filter-options label:has(input:checked) {
+@media (hover: hover) {
+	.filter-options label:hover {
+		background: #EAE4DA;
+	}
+}
+
+.filter-options label:has(input:checked) {
 	background: #EAE4DA;
 }
 
@@ -272,8 +359,10 @@ export default {
 	text-decoration: none;
 }
 
-.clear-btn:hover {
-	background: #E6E0D7;
+@media (hover: hover) {
+	.clear-btn:hover {
+		background: #E6E0D7;
+	}
 }
 
 .box-container {
@@ -290,6 +379,9 @@ export default {
 	-moz-hyphens: auto;
 	-webkit-hyphens: auto;
 	hyphens: auto;
+
+	-webkit-tap-highlight-color: transparent;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 .box-container:not(.search, .filters) {

@@ -25,19 +25,19 @@ export default {
 
 <template>
 	<nav class="nav">
-		<RouterLink to="/" @mouseover="listHover = true" @mouseleave="listHover = false">
-			<img v-show="listHover !== true && $route.path !== '/'" src="../assets/icons/list.svg" alt="List" draggable="false" />
-			<img v-show="listHover || $route.path === '/'" src="../assets/icons/list_selected.svg" alt="List" draggable="false" />
+		<RouterLink to="/" @mouseover="listHover = true" @mouseleave="listHover = false" @dragstart.prevent>
+			<img v-show="listHover !== true && $route.path !== '/'" src="../assets/icons/list.svg" alt="List" />
+			<img v-show="listHover || $route.path === '/'" src="../assets/icons/list_selected.svg" alt="List" />
 		</RouterLink>
 
-		<RouterLink to="/add" @mouseover="addHover = true" @mouseleave="addHover = false">
-			<img v-show="addHover !== true && $route.path !== '/add'" src="../assets/icons/add.svg" alt="Add" draggable="false" />
-			<img v-show="addHover || $route.path === '/add'" src="../assets/icons/add_selected.svg" alt="Add" draggable="false" />
+		<RouterLink to="/add" @mouseover="addHover = true" @mouseleave="addHover = false" @dragstart.prevent>
+			<img v-show="addHover !== true && $route.path !== '/add'" src="../assets/icons/add.svg" alt="Add" />
+			<img v-show="addHover || $route.path === '/add'" src="../assets/icons/add_selected.svg" alt="Add" />
 		</RouterLink>
 
-		<button @click="goToLastWord" @mouseover="detailsHover = true" @mouseleave="detailsHover = false">
-			<img v-show="detailsHover !== true && !$route.path.startsWith('/word') && !$route.path.startsWith('/edit')" src="../assets/icons/book.svg" alt="Details" draggable="false" />
-			<img v-show="detailsHover || $route.path.startsWith('/word') || $route.path.startsWith('/edit')" src="../assets/icons/book_selected.svg" alt="Details" draggable="false" />
+		<button @click="goToLastWord" @mouseover="detailsHover = true" @mouseleave="detailsHover = false" @dragstart.prevent>
+			<img v-show="detailsHover !== true && !$route.path.startsWith('/word') && !$route.path.startsWith('/edit')" src="../assets/icons/book.svg" alt="Details" />
+			<img v-show="detailsHover || $route.path.startsWith('/word') || $route.path.startsWith('/edit')" src="../assets/icons/book_selected.svg" alt="Details" />
 		</button>
 	</nav>
 </template>
@@ -46,8 +46,10 @@ export default {
 .nav {
 	position: fixed;
 	bottom: 0;
+	left: 0;
+	right: 0;
 	padding-top: 0.7rem;
-	padding-bottom: calc(0.5rem + env(safe-area-inset-top));
+	padding-bottom: calc(0.5rem + max(0rem, calc(env(safe-area-inset-top) - 0.5rem)));
 	padding-left: 0;
 	padding-right: 0;
 

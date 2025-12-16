@@ -76,13 +76,21 @@ export default {
 			// Close the menu if clicked outside
 			if (this.showMenu && !this.$refs.menu.contains(event.target) && !this.$refs.hamburger.contains(event.target))
 				this.showMenu = false;
+		},
+
+		handleEscapeKey(event) {
+			// Close the menu if the Escape key is pressed
+			if (event.key === "Escape")
+				this.showMenu = false;
 		}
 	},
 	mounted() {
 		document.addEventListener("mousedown", this.handleClickOutside);
+		document.addEventListener("keydown", this.handleEscapeKey);
 	},
 	beforeDestroy() {
 		document.removeEventListener("mousedown", this.handleClickOutside);
+		document.removeEventListener("keydown", this.handleEscapeKey);
 	}
 };
 </script>
@@ -126,6 +134,8 @@ export default {
 .header-container {
 	position: fixed;
 	top: 0;
+	left: 0;
+	right: 0;
 	padding-top: calc(0.5rem + env(safe-area-inset-top));
 	padding-bottom: 0.5rem;
 	padding-left: 0.5rem;

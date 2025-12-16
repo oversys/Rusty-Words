@@ -246,10 +246,15 @@ export default {
 	transition: all 0.2s ease;
 	text-decoration: none;
 	text-align: center;
+
+	-webkit-tap-highlight-color: transparent;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
-.normal-btn:hover {
-	background-color: #E3DCCD;
+@media (hover: hover) {
+	.normal-btn:hover {
+		background-color: #E3DCCD;
+	}
 }
 
 .remove-btn {
@@ -257,8 +262,10 @@ export default {
 	border-color: #E6B4B4;
 }
 
-.remove-btn:hover {
-	background-color: #F2BDBD;
+@media (hover: hover) {
+	.remove-btn:hover {
+		background-color: #F2BDBD;
+	}
 }
 
 .arabic-translation {

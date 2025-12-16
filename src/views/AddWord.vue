@@ -148,14 +148,14 @@ export default {
 		<div class="field-container">
 			<p>Word Type</p>
 
-			<select v-model="word.type">
+			<select v-model="word.type" style="margin-bottom: 1.5rem;">
 				<option disabled value="">Select word type</option>
 				<option v-for="(type, index) in availableWordTypes" :key="index" :value="type">{{ type }}</option>
 			</select>
 		</div>
 
 		<!-- Definite article (for nouns) -->
-		<div v-if="word.type == 'noun'" class="field-container">
+		<div v-if="word.type == 'noun'" class="field-container" style="margin-bottom: 1.5rem;">
 			<p>Definite Article</p>
 
 			<select v-model="word.definiteArticle">
@@ -428,6 +428,18 @@ select {
 	font-size: 1.5rem;
 	text-align: center;
 	cursor: pointer;
+}
+
+/* Show conjugation in 1 column on narrow screens as opposed to the label and conjugation being next to each other */
+@media (max-width: 875px) {
+	.conjugation-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.grid-row {
+		display: flex;
+		flex-direction: column;
+	}
 }
 </style>
 

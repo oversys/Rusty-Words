@@ -12,7 +12,7 @@ The `build_apk.sh` script can be used as a reference on how to build the APK. It
 ## Building on Linux
 Running `npm run tauri build` will build the program as Debian & RPM packages as well as an AppImage.
 
-To install on Arch Linux, use `debtap` to convert the `.deb` packages to an Arch Linux package then install using `pacman -U [package]`.
+To install on Arch Linux, use `debtap` to convert the `.deb` package to an Arch Linux package, then install using `pacman -U [package]`.
 
 See Tauri docs for [distributing on Linux](https://v2.tauri.app/distribute/#linux).
 

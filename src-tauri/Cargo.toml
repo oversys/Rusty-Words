@@ -1,7 +1,7 @@
 [package]
 name = "rusty-words"
 version = "0.1.0"
-description = "A Tauri App"
+description = "Rusty Words"
 authors = ["you"]
 edition = "2021"
 
