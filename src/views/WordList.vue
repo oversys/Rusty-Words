@@ -5,8 +5,9 @@ export default {
 	data() {
 		return {
 			showScrollButton: false,
+			isLoading: true,
 
-			words: null,
+			words: [],
 			searchQuery: "",
 			showFilters: false,
 
@@ -82,7 +83,9 @@ export default {
 			});
 		}
 	},
-	async created() {
+	async mounted() {
+		window.addEventListener("scroll", this.handleScroll);
+
 		this.words = await invoke("get_all_words");
 		this.availableTags = await invoke("get_tags");
 
@@ -91,9 +94,8 @@ export default {
 			this.selectedTags = [parseInt(tagFromQuery)];
 			this.showFilters = true;
 		}
-	},
-	mounted() {
-		window.addEventListener("scroll", this.handleScroll);
+
+		this.isLoading = false;
 	},
 	unmounted() {
 		window.removeEventListener("scroll", this.handleScroll);
@@ -123,8 +125,21 @@ export default {
 			<button class="filter-button" @click="showFilters = !showFilters"><img src="../assets/icons/filter.svg" alt="Filter" /></button>
 		</div>
 
-		<p v-if="filteredWords.length !== words.length" style="margin-bottom: 1rem;"><b>{{ filteredWords.length }}</b> out of <b>{{ words.length }}</b> words matched search/filter criteria.</p>
-		<p v-else style="margin-bottom: 1.5rem;"><b>{{ words.length }}</b> words found.</p>
+		<p v-if="isLoading"><i>Loading words...</i></p>
+		<p v-else-if="filteredWords.length !== words.length" style="margin-bottom: 1.5rem;"><i><b>{{ filteredWords.length }}</b> out of <b>{{ words.length }}</b> words matched search/filter criteria.</i></p>
+		<p v-else style="margin-bottom: 1.5rem;"><i><b>{{ words.length }}</b> words found.</i></p>
+
+		<template v-if="isLoading">
+			<div
+				v-for="n in 6"
+				:key="n"
+				class="box-container skeleton"
+			>
+				<div class="skeleton-title"></div>
+				<div class="skeleton-subtitle"></div>
+				<div class="skeleton-line"></div>
+			</div>
+		</template>
 
 		<!-- Collapsible filter section -->
 		<transition name="slide-fade">
@@ -195,7 +210,7 @@ export default {
 
 .scroll-top-btn {
 	position: fixed;
-	top: 4.5rem;
+	top: calc(4.5rem + env(safe-area-inset-top));
 	left: 0;
 	right: 0;
 	margin: 0 auto;
@@ -271,6 +286,7 @@ export default {
 	width: 3.5rem;
 	padding: 0.25rem;
 	cursor: pointer;
+	margin-top: 0.5rem;
 
 	-webkit-tap-highlight-color: transparent;
 	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -348,20 +364,25 @@ export default {
 }
 
 .clear-btn {
+	all: unset;
 	padding: 0.4rem 0.8rem;
 	font-size: 1.2rem;
 	border-radius: 0.5rem;
 	cursor: pointer;
-	border: 1.75px solid #D4CDC3;
-	background-color: #EFEBE0;
+	border: 1.75px solid #E6B4B4;
+	background-color: #F8DADA;
 	color: #000;
 	transition: all 0.2s ease;
 	text-decoration: none;
+	text-align: center;
+
+	-webkit-tap-highlight-color: transparent;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 @media (hover: hover) {
 	.clear-btn:hover {
-		background: #E6E0D7;
+		background: #F2BDBD;
 	}
 }
 
@@ -391,7 +412,7 @@ export default {
 .search {
 	flex: 1;
 	padding: 1rem;
-	margin: 1.5rem 0;
+	margin: 1rem 0 0.5rem 0;
 	display: flex;
 	flex-direction: row;
 }
@@ -409,6 +430,51 @@ export default {
 	margin-left: 1rem;
 }
 
+.skeleton {
+	pointer-events: none;
+}
+
+.skeleton-title,
+.skeleton-subtitle,
+.skeleton-line {
+	background: linear-gradient(
+		90deg,
+		#ebebeb 25%,
+		#f5f5f5 37%,
+		#ebebeb 63%
+		);
+	background-size: 400% 100%;
+	animation: shimmer 1.4s ease infinite;
+	border-radius: 4px;
+}
+
+.skeleton-title {
+	height: 1.6rem;
+	width: 60%;
+	margin-bottom: 0.75rem;
+}
+
+.skeleton-subtitle {
+	height: 1.1rem;
+	width: 30%;
+	margin-bottom: 1rem;
+}
+
+.skeleton-line {
+	height: 1.1rem;
+	width: 80%;
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: 100% 0;
+	}
+
+	100% {
+		background-position: 0 0;
+	}
+}
+
 .translation {
 	margin-top: 0.8rem;
 }
@@ -416,6 +482,123 @@ export default {
 .arabic-translation {
 	text-align: right;
 	font-family: RB;
+}
+
+/* Compact mode / mobile optimization */
+@media (max-height: 850px) {
+	.main-container {
+		padding: 0.5rem;
+		padding-bottom: calc(3rem + env(safe-area-inset-bottom));
+	}
+
+	.search {
+		margin: 0.5rem 0 1rem 0;
+		padding: 0.6rem;
+	}
+
+	.search img {
+		height: 1.4rem;
+	}
+
+	.search input {
+		font-size: 1rem;
+		margin-left: 0.6rem;
+	}
+
+	.filter-button {
+		height: 2.7rem;
+		width: 2.7rem;
+		border-radius: 0.6rem;
+		margin-top: 0;
+	}
+
+	.filter-button img {
+		height: 1.7rem;
+		width: 1.7rem;
+	}
+
+	.box-container {
+		padding: 0.85rem;
+		margin-bottom: 0.6rem;
+		border-radius: 0.6rem;
+	}
+
+	.box-container h2 {
+		font-size: 1.57rem;
+		margin: 0;
+		line-height: 1.2;
+	}
+
+	.box-container h4 {
+		font-size: 1.1rem;
+		margin: 0.2rem 0 0.5rem 0;
+		color: #666;
+	}
+
+	.translation {
+		margin-top: 0.4rem;
+		margin-bottom: 0.2rem;
+		font-size: 1.1rem;
+		line-height: 1.3;
+	}
+
+	.filters h2 {
+		font-size: 1.57rem;
+		margin: 0 0 0.8rem;
+	}
+
+	.filter-group {
+		margin-bottom: 0.8rem;
+		padding-bottom: 0.6rem;
+	}
+
+	.filter-group h4 {
+		font-size: 1.1rem;
+		margin: 0 0 0.4rem;
+	}
+
+	.filter-options label {
+		padding: 0.3rem 0.6rem;
+		font-size: 0.9rem;
+	}
+
+	.scroll-top-btn {
+		width: 2.75rem;
+		height: 2.75rem;
+	}
+
+	.scroll-top-btn img {
+		height: 1.2rem;
+		width: 1.2rem;
+	}
+
+	p {
+		font-size: 1.1rem;
+		margin-bottom: 0.8rem;
+	}
+
+	.clear-btn {
+		font-size: 0.93rem;
+	}
+
+	.filter-group:last-of-type {
+		margin-bottom: 1.2rem;
+	}
+
+	.skeleton-title,
+	.skeleton-subtitle,
+	.skeleton-line {
+		border-radius: 3px;
+	}
+
+	.skeleton-title {
+		height: 1.26rem;
+	}
+
+	.skeleton-subtitle,
+	.skeleton-line {
+		height: 0.86rem;
+	}
 }
 </style>
 

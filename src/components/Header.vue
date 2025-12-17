@@ -178,8 +178,8 @@ export default {
 
 .menu {
 	position: absolute;
-	right: 2rem;
-	top: calc(3rem + env(safe-area-inset-top));
+	right: calc(2rem + env(safe-area-inset-right));
+	top: calc(3.5rem + env(safe-area-inset-top));
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -205,6 +205,27 @@ export default {
 
 	-webkit-tap-highlight-color: transparent;
 	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+/* Compact mode / mobile optimization */
+@media (max-height: 850px) {
+	.header-container h2 {
+		font-size: 1.57rem;
+	}
+
+	.hamburger {
+		margin: 2.5px 0;
+	}
+
+	.menu {
+		width: 13rem;
+		padding: 0.5rem 0.3rem;
+	}
+
+	.menu button {
+		padding: 0.4rem;
+		font-size: 0.95rem;
+	}
 }
 </style>
 

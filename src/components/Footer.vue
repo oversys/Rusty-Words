@@ -49,7 +49,7 @@ export default {
 	left: 0;
 	right: 0;
 	padding-top: 0.7rem;
-	padding-bottom: calc(0.5rem + max(0rem, calc(env(safe-area-inset-top) - 0.5rem)));
+	padding-bottom: calc(0.5rem + max(0rem, calc(env(safe-area-inset-top) - 0.85rem)));
 	padding-left: 0;
 	padding-right: 0;
 
@@ -86,6 +86,18 @@ button:focus {
 	height: 2rem;
 	width: auto;
 	display: block;
+}
+
+/* Compact mode / mobile optimization */
+@media (max-height: 850px) {
+	.nav {
+		padding-top: 0.5rem;
+		padding-bottom: calc(0.4rem + max(0rem, calc(env(safe-area-inset-top) - 0.85rem)));
+	}
+
+	.nav img {
+		height: 1.7rem;
+	}
 }
 </style>
 

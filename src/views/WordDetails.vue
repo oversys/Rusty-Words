@@ -8,6 +8,7 @@ export default {
 
 	data() {
 		return {
+			showSkeleton: false,
 			word: null,
 			conjugationLabels: {
 				presentIk: "Present, ik",
@@ -82,7 +83,13 @@ export default {
 		}
 	},
 
-	async created() {
+	async mounted() {
+		setTimeout(() => {
+			if (!this.word) {
+				this.showSkeleton = true;
+			}
+		}, 300);
+
 		this.word = await invoke("get_word", { wordId: parseInt(this.wordId) });
 		localStorage.setItem("lastViewedWordId", parseInt(this.wordId));
 	},
@@ -108,10 +115,10 @@ export default {
 
 			<br>
 
-			<div v-for="translation in word.translations">
+			<template v-for="translation in word.translations">
 				<p v-if="translation.language == 'English'" class="translation">→ <i>{{ translation.translation }}</i></p>
 				<p v-if="translation.language == 'Arabic'" class="translation arabic-translation">{{ translation.translation }} ←</p>
-			</div>
+			</template>
 
 			<hr />
 
@@ -124,7 +131,7 @@ export default {
 				</p>
 
 				<p v-if="word.preposition">
-					<span class="label">Preposition:</span> {{ word.preposition }}
+					<span class="label">Separable prefix:</span> {{ word.preposition }}
 				</p>
 
 				<p v-if="word.source">
@@ -188,8 +195,32 @@ export default {
 			</div>
 		</div>
 
-		<div v-else>
-			<p>This page will show the details of the last word you selected.</p>
+		<div v-else-if="showSkeleton" class="word-container">
+			<div class="word-header">
+				<div class="word-info" style="width: 100%;">
+					<div class="skeleton-title"></div>
+					<div class="skeleton-subtitle" style="width: 30%;"></div>
+				</div>
+			</div>
+
+			<div class="skeleton-line" style="width: 50%; margin-top: 2rem;"></div>
+			<div class="skeleton-line" style="width: 35%; margin-top: 1rem; margin-left: 65%;"></div>
+
+			<hr />
+			<div class="skeleton-heading"></div>
+			<div class="skeleton-line" style="width: 100%; height: 3.5rem;"></div>
+
+			<hr />
+			<div class="skeleton-heading"></div>
+			<div class="skeleton-line" style="width: 100%; height: 10rem;"></div>
+
+			<hr />
+			<div class="skeleton-heading"></div>
+			<div class="skeleton-line" style="width: 100%; height: 3.5rem;"></div>
+
+			<hr />
+			<div class="skeleton-heading"></div>
+			<div class="skeleton-line" style="width: 100%; height: 3.5rem;"></div>
 		</div>
 	</div>
 </template>
@@ -351,7 +382,7 @@ hr {
 	height: 1px;
 	border: 0;
 	border-top: 1.75px solid #D4CDC3;
-	margin: 1em 0;
+	margin: 1rem 0;
 	padding: 0;
 }
 
@@ -402,6 +433,54 @@ hr {
 	text-align: center;
 }
 
+.skeleton-title,
+.skeleton-subtitle,
+.skeleton-heading,
+.skeleton-line {
+	background: linear-gradient(
+		90deg,
+		#ebebeb 25%,
+		#f5f5f5 37%,
+		#ebebeb 63%
+		);
+	background-size: 400% 100%;
+	animation: shimmer 1.4s ease infinite;
+	border-radius: 4px;
+}
+
+.skeleton-title {
+	height: 3.5rem;
+	width: 90%;
+	margin-bottom: 0.75rem;
+}
+
+.skeleton-subtitle {
+	height: 1.1rem;
+	width: 30%;
+	margin-bottom: 1rem;
+}
+
+.skeleton-heading {
+	height: 1.5rem;
+	width: 40%;
+	margin-bottom: 1rem;
+}
+
+.skeleton-line {
+	height: 1.3rem;
+	width: 80%;
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: 100% 0;
+	}
+
+	100% {
+		background-position: 0 0;
+	}
+}
+
 /* Move buttons below word and type on narrow screens */
 @media (max-width: 1200px) {
 	.word-header {
@@ -431,6 +510,105 @@ hr {
 	.grid-row {
 		display: flex;
 		flex-direction: column;
+	}
+}
+
+/* Compact mode / mobile optimization */
+@media (max-height: 850px) {
+	.main-container {
+		padding: 0.5rem;
+	}
+
+	.word-container {
+		margin-top: 0.5rem;
+	}
+
+	.word-info h1 {
+		font-size: 2.5rem;
+	}
+
+	.word-info h4 {
+		font-size: 1.1rem;
+	}
+
+	.word-container p,
+	.details-container p,
+	ul li,
+	.empty-section {
+		font-size: 1.1rem;
+	}
+
+	.empty-section {
+		padding: 0.8rem;
+	}
+
+	.normal-btn,
+	.remove-btn {
+		font-size: 1rem;
+	}
+
+	hr {
+		margin: 0.9rem 0;
+	}
+
+	h2 {
+		font-size: 1.57rem;
+	}
+
+	.translation:first-of-type {
+		margin-top: 0.2rem !important;
+	}
+
+	.box-container {
+		padding: 0.85rem;
+		margin-bottom: 0.6rem;
+		border-radius: 0.6rem;
+	}
+
+	.details-container {
+		gap: 0.6rem;
+		margin-top: 0.5rem;
+	}
+
+	.details-container p {
+		padding: 0.3rem 0.6rem;
+	}
+
+	ul {
+		margin-top: 0.5rem;
+	}
+
+	ul li {
+		padding: 0.6rem 0.8rem;
+		margin-bottom: 0.6rem;
+		border-radius: 0.6rem;
+	}
+
+	.tags-container {
+		gap: 0.4rem;
+		margin-top: 0.5rem;
+	}
+
+	.tag a {
+		font-size: 1.1rem;
+	}
+
+	.conjugation-grid {
+		padding: 0.75rem;
+	}
+
+	.grid-row {
+		gap: 0.1rem;
+	}
+
+	.grid-row label {
+		font-size: 1rem;
+		padding: 0 0 0.2rem 0.2rem;
+	}
+
+	.grid-row span {
+		font-size: 1rem;
+		padding: 0.6rem 0.8rem;
 	}
 }
 </style>

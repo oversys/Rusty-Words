@@ -148,14 +148,14 @@ export default {
 		<div class="field-container">
 			<p>Word Type</p>
 
-			<select v-model="word.type" style="margin-bottom: 1.5rem;">
+			<select v-model="word.type" class="spacing-bottom">
 				<option disabled value="">Select word type</option>
 				<option v-for="(type, index) in availableWordTypes" :key="index" :value="type">{{ type }}</option>
 			</select>
 		</div>
 
 		<!-- Definite article (for nouns) -->
-		<div v-if="word.type == 'noun'" class="field-container" style="margin-bottom: 1.5rem;">
+		<div v-if="word.type == 'noun'" class="field-container spacing-bottom">
 			<p>Definite Article</p>
 
 			<select v-model="word.definiteArticle">
@@ -173,9 +173,9 @@ export default {
 			</div>
 		</div>
 
-		<!-- Preposition (for separable verbs) -->
+		<!-- Separable prefix (for separable verbs) -->
 		<div v-if="word.type == 'separable verb'" class="field-container">
-			<p>Preposition</p>
+			<p>Separable prefix</p>
 
 			<div class="box-container">
 				<input v-model="word.preposition" />
@@ -214,7 +214,7 @@ export default {
 					<option v-for="(lang, idx) in languageOptions" :key="idx" :value="lang">{{ lang }}</option>
 				</select>
 			</div>
-			<button @click="addTranslation" style="margin-top: 1.5rem;">+ Add Translation</button>
+			<button @click="addTranslation" class="spacing-top">+ Add Translation</button>
 		</div>
 
 		<!-- Sentences -->
@@ -231,7 +231,7 @@ export default {
 				</div>
 			</div>
 
-			<button @click="addSentence" style="margin-top: 1.5rem;">+ Add Sentence</button>
+			<button @click="addSentence" class="spacing-top">+ Add Sentence</button>
 		</div>
 
 		<!-- Notes -->
@@ -253,7 +253,7 @@ export default {
 			<select
 				v-for="(selectedId, index) in selectedTagIds"
 				:key="'tag-select-' + index"
-				style="margin: 0 0 1.5rem 0;"
+				class="spacing-bottom"
 				v-model="selectedTagIds[index]"
 				@change="onTagSelect"
 			>
@@ -274,7 +274,7 @@ export default {
 				</div>
 			</div>
 
-			<button @click="addTag" style="margin-top: 1rem;">+ Add Tag</button>
+			<button @click="addTag">+ Add Tag</button>
 		</div>
 
 		<!-- Conjugation (for verbs and separable verbs) -->
@@ -329,6 +329,14 @@ export default {
 	font-size: 1.35rem;
 	cursor: pointer;
 	margin-bottom: 1.5rem;
+}
+
+.spacing-bottom {
+	margin-bottom: 1.5rem;
+}
+
+.spacing-top {
+	margin-top: 1.5rem !important;
 }
 
 input,
@@ -439,6 +447,83 @@ select {
 	.grid-row {
 		display: flex;
 		flex-direction: column;
+	}
+}
+
+/* Compact mode / mobile optimization */
+@media (max-height: 850px) {
+	.main-container {
+		padding: 0.5rem;
+	}
+
+	.field-container p {
+		font-size: 1.25rem;
+		margin-bottom: 0.3rem;
+	}
+
+	.field-container button {
+		font-size: 1.1rem;
+		margin-bottom: 0.8rem;
+	}
+
+	input,
+	select {
+		font-size: 1.1rem;
+		padding: 0.8rem;
+		border-radius: 0.6rem;
+	}
+
+	select {
+		background-position: right 0.8rem center;
+	}
+
+	.box-container {
+		margin-bottom: 0.6rem;
+	}
+
+	.spacing-bottom {
+		margin-bottom: 0.6rem;
+	}
+
+	.spacing-top {
+		margin-top: 0.6rem !important;
+	}
+
+	.translation-group,
+	.sentence-group,
+	.conjugation-grid {
+		padding: 0.6rem;
+		margin-top: 0.5rem;
+		border-radius: 0.6rem;
+	}
+
+	.conjugation-grid {
+		padding: 0.75rem;
+	}
+
+	.grid-row {
+		gap: 0.1rem;
+	}
+
+	.grid-row label {
+		font-size: 1rem;
+		padding: 0 0 0.2rem 0.2rem;
+	}
+
+	.grid-row span {
+		font-size: 1rem;
+		padding: 0.6rem 0.8rem;
+	}
+
+	.buttons-container {
+		gap: 0.75rem;
+	}
+
+	.cancel-btn,
+	.save-btn {
+		padding: 0.75rem;
+		font-size: 1.2rem;
+		border-radius: 0.6rem;
 	}
 }
 </style>
