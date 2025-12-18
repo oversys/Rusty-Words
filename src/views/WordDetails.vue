@@ -85,13 +85,14 @@ export default {
 
 	async mounted() {
 		setTimeout(() => {
-			if (!this.word) {
+			if (!this.word)
 				this.showSkeleton = true;
-			}
 		}, 300);
 
 		this.word = await invoke("get_word", { wordId: parseInt(this.wordId) });
 		localStorage.setItem("lastViewedWordId", parseInt(this.wordId));
+
+		this.showSkeleton = false;
 	},
 }
 </script>

@@ -4,12 +4,16 @@ import { invoke } from "@tauri-apps/api/core";
 export default {
 	data() {
 		return {
-			showScrollButton: false,
 			isLoading: true,
-
 			words: [],
+
+			searchTimeout: null,
+			searchIndexReady: false,
 			searchQuery: "",
+			debouncedQuery: "",
+
 			showFilters: false,
+			showScrollButton: false,
 
 			availableWordTypes: ["noun", "verb", "separable verb", "adjective", "adverb", "suffix", "pronoun", "preposition", "conjunction", "interjection", "not given"],
 			definiteArticles: ["de", "het", "de/het"],
@@ -36,41 +40,33 @@ export default {
 			});
 		}
 	},
+	watch: {
+		// To reduce CPU load, show skeleton loaders while the user is typing.
+		// Has the added benefit of showing the skeleton loaders after clearing
+		// the search query as it takes time to load all the words again.
+		searchQuery(newValue) {
+			this.isLoading = true;
+			clearTimeout(this.searchTimeout);
+
+			this.searchTimeout = setTimeout(() => {
+				this.debouncedQuery = newValue;
+				this.isLoading = false;
+			}, 160);
+		}
+	},
 	computed: {
 		filteredWords() {
-			if (!this.words) return [];
+			if (!this.words || !this.searchIndexReady) return [];
 
-			const query = this.searchQuery.toLowerCase();
+			const query = this.debouncedQuery
+			.toLowerCase()
+			.normalize("NFD")
+			.replace(/[\u0300-\u036F]/g, "")
+			.replace(/[\u064B-\u0655]/g, "");
 
 			return this.words.filter(word => {
 				// Text search
-				const fields = [
-					word.dutchWord,
-					word.plural,
-					word.preposition,
-					word.source
-				].filter(Boolean).join(" ").toLowerCase();
-
-				const translationFields = word.translations
-				.map(t => t.translation)
-				.join(" ")
-				.toLowerCase();
-
-				const sentenceFields = word.sentences
-				.map(s => s.sentence + " " + s.meaning)
-				.join(" ")
-				.toLowerCase();
-
-				const notesFields = word.notes.join(" ").toLowerCase();
-
-				const tagsFields = word.tags
-				.map(tag => tag.name)
-				.join(" ")
-				.toLowerCase();
-
-				const combined = `${fields} ${translationFields} ${sentenceFields} ${notesFields} ${tagsFields}`;
-
-				const matchesSearch = !query || combined.includes(query);
+				const matchesSearch = !query || word._searchIndex.includes(query);
 
 				// Filters
 				const matchesType = this.selectedWordTypes.length === 0 || this.selectedWordTypes.includes(word.type);
@@ -96,6 +92,46 @@ export default {
 		}
 
 		this.isLoading = false;
+
+		// Build search index for each word once after loading
+		// instead of building it every time the user searches
+		for (const word of this.words) {
+			const fields = [
+				word.dutchWord,
+				word.plural,
+				word.preposition,
+				word.source
+			]
+			.filter(Boolean)
+			.join(" ")
+			.toLowerCase();
+
+			const translationFields = word.translations
+			.map(t => t.translation)
+			.join(" ")
+			.toLowerCase();
+
+			const sentenceFields = word.sentences
+			.map(s => s.sentence + " " + s.meaning)
+			.join(" ")
+			.toLowerCase();
+
+			const notesFields = word.notes.join(" ").toLowerCase();
+
+			const tagsFields = word.tags
+			.map(tag => tag.name)
+			.join(" ")
+			.toLowerCase();
+
+			const combined = `${fields} ${translationFields} ${sentenceFields} ${notesFields} ${tagsFields}`
+			.normalize("NFD")
+			.replace(/[\u0300-\u036F]/g, "")
+			.replace(/[\u064B-\u0655]/g, "");
+
+			word._searchIndex = combined;
+		}
+
+		this.searchIndexReady = true;
 	},
 	unmounted() {
 		window.removeEventListener("scroll", this.handleScroll);
@@ -117,17 +153,39 @@ export default {
 
 		<!-- Search & Filter -->
 		<div class="search-filter-container">
-			<div class="box-container search">
+			<div
+				class="box-container search"
+				:class="{ 'disabled-input': !searchIndexReady }"
+			>
 				<img src="../assets/icons/search.svg" alt="Search" />
-				<input v-model="searchQuery" placeholder="Search words" />
+				<input
+					v-model="searchQuery"
+					placeholder="Search words"
+					:disabled="!searchIndexReady"
+				/>
 			</div>
 
 			<button class="filter-button" @click="showFilters = !showFilters"><img src="../assets/icons/filter.svg" alt="Filter" /></button>
 		</div>
 
-		<p v-if="isLoading"><i>Loading words...</i></p>
-		<p v-else-if="filteredWords.length !== words.length" style="margin-bottom: 1.5rem;"><i><b>{{ filteredWords.length }}</b> out of <b>{{ words.length }}</b> words matched search/filter criteria.</i></p>
-		<p v-else style="margin-bottom: 1.5rem;"><i><b>{{ words.length }}</b> words found.</i></p>
+		<p
+			v-if="isLoading"
+			style="margin-bottom: 1.5rem;"
+		>
+			<i>Loading words...</i>
+		</p>
+		<p
+			v-else-if="filteredWords.length !== words.length"
+			style="margin-bottom: 1.5rem;"
+		>
+			<i><b>{{ filteredWords.length }}</b> out of <b>{{ words.length }}</b> words matched search/filter criteria.</i>
+		</p>
+		<p
+			v-else
+			style="margin-bottom: 1.5rem;"
+		>
+			<i><b>{{ words.length }}</b> words found.</i>
+		</p>
 
 		<template v-if="isLoading">
 			<div
@@ -193,8 +251,18 @@ export default {
 			<h4>({{ word.type }})</h4>
 
 			<div v-for="translation in word.translations">
-				<p v-if="translation.language == 'English'" class="translation">→ <i>{{ translation.translation }}</i></p>
-				<p v-else-if="translation.language == 'Arabic'" class="translation arabic-translation">{{ translation.translation }} ←</p>
+				<p
+					v-if="translation.language == 'English'"
+					class="translation"
+				>
+					→ <i>{{ translation.translation }}</i>
+				</p>
+				<p
+					v-else-if="translation.language == 'Arabic'"
+					class="translation arabic-translation"
+				>
+					{{ translation.translation }} ←
+				</p>
 			</div>
 		</div>
 	</div>
@@ -426,7 +494,7 @@ export default {
 	padding-top: 3px;
 	width: 100%;
 	font-size: 1.35rem;
-	font-family: Helvetica Neue;
+	font-family: "Helvetica Neue", RB;
 	margin-left: 1rem;
 }
 
@@ -482,6 +550,12 @@ export default {
 .arabic-translation {
 	text-align: right;
 	font-family: RB;
+}
+
+.disabled-input {
+	background: #EDEAE1 !important;
+	color: #A0A0A0 !important;
+	cursor: not-allowed;
 }
 
 /* Compact mode / mobile optimization */

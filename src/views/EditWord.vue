@@ -209,7 +209,7 @@ export default {
 
 		<!-- Sentences -->
 		<div class="field-container">
-			<p>Sentences</p>
+			<p :style="{ marginBottom: word.sentences.length ? '0.5rem' : '0' }">Sentences</p>
 
 			<div v-for="(sentence, index) in word.sentences" :key="index" class="sentence-group">
 				<div class="box-container" style="margin-bottom: 1rem;">
@@ -226,13 +226,13 @@ export default {
 
 		<!-- Notes -->
 		<div class="field-container">
-			<p>Notes</p>
+			<p :style="{ marginBottom: word.notes.length ? '0.5rem' : '0' }">Notes</p>
 
 			<div v-for="(note, index) in word.notes" :key="index" class="box-container">
 				<input v-model="word.notes[index]" />
 			</div>
 
-			<button @click="addNote">+ Add Note</button>
+			<button @click="addNote" class="spacing-top">+ Add Note</button>
 		</div>
 
 		<!-- Tags -->
@@ -343,7 +343,7 @@ select {
 	box-sizing: border-box;
 	width: 100%;
 	font-size: 1.35rem;
-	font-family: 'Helvetica Neue', sans-serif;
+	font-family: "Helvetica Neue", RB;
 	border-radius: 0.75rem;
 	border: 1.75px solid #D4CDC3;
 	background: #FEFEFA;
@@ -506,6 +506,10 @@ select {
 
 	.spacing-top {
 		margin-top: 0.6rem !important;
+	}
+
+	.rtl {
+		padding: 0.36rem 1rem;
 	}
 
 	.translation-group,

@@ -28,11 +28,13 @@ export default {
 				notes: [""],
 				tags: []
 			},
+
 			availableWordTypes: ["noun", "verb", "separable verb", "adjective", "adverb", "suffix", "pronoun", "preposition", "conjunction", "interjection", "not given"],
 			definiteArticles: ["de", "het", "de/het"],
 			languageOptions: ["English", "Arabic"],
 			availableTags: [],
 			selectedTagIds: [""],
+
 			conjugationLabels: {
 				presentIk: "Present, ik",
 				presentJij: "Present, jij",
@@ -42,7 +44,11 @@ export default {
 				imperfectumSingular: "Imperfectum, singular",
 				imperfectumPlural: "Imperfectum, plural",
 				perfectum: "Perfectum"
-			}
+			},
+
+			wordTimeout: null,
+			wordExists: false,
+			words: null
 		}
 	},
 	methods: {
@@ -128,8 +134,24 @@ export default {
 		}
 	},
 
-	async created() {
+	watch: {
+		"word.dutchWord"(newValue) {
+			clearTimeout(this.wordTimeout);
+
+			if (!newValue) {
+				this.wordExists = false;
+				return
+			}
+
+			this.wordTimeout = setTimeout(() => {
+				this.wordExists = this.words.some(w => w.dutchWord === this.word.dutchWord);
+			}, 2000);
+		}
+	},
+
+	async mounted() {
 		this.availableTags = await invoke("get_tags");
+		this.words = await invoke("get_all_words");
 	}
 }
 </script>
@@ -141,6 +163,11 @@ export default {
 			<p>Dutch Word</p>
 			<div class="box-container">
 				<input v-model="word.dutchWord" />
+			</div>
+
+			<!-- Word exists warning -->
+			<div v-if="wordExists" class="word-exists-warning">
+				Note: Word already exists in dictionary.
 			</div>
 		</div>
 
@@ -339,13 +366,25 @@ export default {
 	margin-top: 1.5rem !important;
 }
 
+.word-exists-warning {
+	font-size: 1.35rem;
+	font-style: italic;
+	color: #A0A0A0;
+	background: #EDEAE1;
+	border: 1.5px dashed #D4CDC3;
+	border-radius: 0.75rem;
+	padding: 0.75rem 0;
+	margin-bottom: 1.5rem;
+	text-align: center;
+}
+
 input,
 select {
 	all: unset;
 	box-sizing: border-box;
 	width: 100%;
 	font-size: 1.35rem;
-	font-family: 'Helvetica Neue', sans-serif;
+	font-family: "Helvetica Neue", RB;
 	border-radius: 0.75rem;
 	border: 1.75px solid #D4CDC3;
 	background: #FEFEFA;
@@ -466,6 +505,11 @@ select {
 		margin-bottom: 0.8rem;
 	}
 
+	.word-exists-warning {
+		font-size: 1.1rem;
+		margin-bottom: 0.6rem;
+	}
+
 	input,
 	select {
 		font-size: 1.1rem;
@@ -487,6 +531,10 @@ select {
 
 	.spacing-top {
 		margin-top: 0.6rem !important;
+	}
+
+	.rtl {
+		padding: 0.36rem 1rem;
 	}
 
 	.translation-group,
