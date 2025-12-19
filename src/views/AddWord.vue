@@ -108,19 +108,19 @@ export default {
 		},
 
 		async addWord() {
-			console.log(this.word);
+			const wordCopy = {...this.word};
 
 			try {
-				if (this.word.type !== 'verb' && this.word.type !== 'separable verb') {
-					delete this.word.conjugation;
+				if (wordCopy.type !== 'verb' && wordCopy.type !== 'separable verb') {
+					delete wordCopy.conjugation;
 				}
 
 				const cleanedWord = {
-					...this.word,
-					translations: this.word.translations.filter(t => t.translation.trim() && t.language.trim()),
-					sentences: this.word.sentences.filter(s => s.sentence.trim() && s.meaning.trim()),
-					notes: this.word.notes.filter(n => n.trim()),
-					tags: this.word.tags.filter(t => t.name.trim())
+					...wordCopy,
+					translations: wordCopy.translations.filter(t => t.translation.trim() && t.language.trim()),
+					sentences: wordCopy.sentences.filter(s => s.sentence.trim() && s.meaning.trim()),
+					notes: wordCopy.notes.filter(n => n.trim()),
+					tags: wordCopy.tags.filter(t => t.name.trim())
 				};
 
 				await invoke("add_word", { word: cleanedWord });
